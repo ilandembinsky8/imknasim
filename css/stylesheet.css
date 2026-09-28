@@ -1,0 +1,579 @@
+/* assistant-regular - latin_hebrew */
+@font-face {
+    font-family: 'Assistant-Regular';
+    font-style: normal;
+    font-weight: 400;
+    src: url('fonts/assistant-v5-latin_hebrew-regular.eot'); /* IE9 Compat Modes */
+    src: local('Assistant'), local('Assistant-Regular'), url('../fonts/assistant-v5-latin_hebrew-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('fonts/assistant-v5-latin_hebrew-regular.woff2') format('woff2'), /* Super Modern Browsers */
+    url('fonts/assistant-v5-latin_hebrew-regular.woff') format('woff'), /* Modern Browsers */
+    url('fonts/assistant-v5-latin_hebrew-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('fonts/assistant-v5-latin_hebrew-regular.svg#Assistant') format('svg'); /* Legacy iOS */
+}
+/* assistant-600 - latin_hebrew */
+@font-face {
+    font-family: 'Assistant-SemiBold';
+    font-style: normal;
+    font-weight: 600;
+    src: url('../fonts/assistant-v5-latin_hebrew-600.eot'); /* IE9 Compat Modes */
+    src: local('Assistant SemiBold'), local('Assistant-SemiBold'), url('fonts/assistant-v5-latin_hebrew-600.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('fonts/assistant-v5-latin_hebrew-600.woff2') format('woff2'), /* Super Modern Browsers */
+    url('fonts/assistant-v5-latin_hebrew-600.woff') format('woff'), /* Modern Browsers */
+    url('fonts/assistant-v5-latin_hebrew-600.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('fonts/assistant-v5-latin_hebrew-600.svg#Assistant') format('svg'); /* Legacy iOS */
+}
+/* assistant-700 - latin_hebrew */
+@font-face {
+    font-family: 'Assistant-Bold';
+    font-style: normal;
+    font-weight: 700;
+    src: url('fonts/assistant-v5-latin_hebrew-700.eot'); /* IE9 Compat Modes */
+    src: local('Assistant Bold'), local('Assistant-Bold'), url('fonts/assistant-v5-latin_hebrew-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('fonts/assistant-v5-latin_hebrew-700.woff2') format('woff2'), /* Super Modern Browsers */
+    url('fonts/assistant-v5-latin_hebrew-700.woff') format('woff'), /* Modern Browsers */
+    url('fonts/assistant-v5-latin_hebrew-700.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('fonts/assistant-v5-latin_hebrew-700.svg#Assistant') format('svg'); /* Legacy iOS */
+}
+
+@font-face {
+    font-family: 'Assistant';
+    src: url('Assistant-ExtraBold.eot');
+    src: url('Assistant-ExtraBold.eot?#iefix') format('embedded-opentype'), url('Assistant-ExtraBold.woff2') format('woff2'), url('Assistant-ExtraBold.woff') format('woff'), url('Assistant-ExtraBold.ttf') format('truetype'), url('Assistant-ExtraBold.svg#Assistant-ExtraBold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+/*inter bold*/
+@font-face {
+    font-family: 'InterBold';
+    src: url('fonts/Inter28pt-Bold.eot');
+    src: url('fonts/Inter28pt-Bold.eot?#iefix') format('embedded-opentype'),
+        url('fonts/Inter28pt-Bold.woff2') format('woff2'),
+        url('fonts/Inter28pt-Bold.woff') format('woff'),
+        url('fonts/Inter28pt-Bold.ttf') format('truetype'),
+        url('fonts/Inter28pt-Bold.svg#Inter28pt-Bold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+/*inter regular*/
+@font-face {
+    font-family: 'InterRegular';
+    src: url('fonts/Inter28pt-Regular.eot');
+    src: url('fonts/Inter28pt-Regular.eot?#iefix') format('embedded-opentype'),
+        url('fonts/Inter28pt-Regular.woff2') format('woff2'),
+        url('fonts/Inter28pt-Regular.woff') format('woff'),
+        url('fonts/Inter28pt-Regular.ttf') format('truetype'),
+        url('fonts/Inter28pt-Regular.svg#Inter28pt-Regular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+
+body{
+    margin:0px;
+    padding:0px;
+    font-size:18px;
+    font-family:Assistant-Regular;
+    direction:rtl;
+    background-color:rgba(22, 56, 111, 1);
+    color:rgba(255,255,255,1)
+}
+
+
+*{
+    box-sizing:border-box;
+}
+
+a{
+    text-decoration:none;
+}
+
+.banner{
+    float:right;
+    width:100%;
+    height:auto
+}
+
+.banner img{
+    width:100%;
+}
+
+.split{
+    float:right;
+    width:100%;
+    height:76px;
+    margin-bottom:20px;
+    padding-right:20px;
+    padding-top:12px;
+    font-family:Assistant-Bold;
+    font-size:2.2rem;
+    background: linear-gradient(90deg, rgba(22, 56, 111, 1) 0%, rgba(232, 29, 212, 1) 100%);
+}
+
+.session{
+    float:right;
+    width:100%;
+    height:76px;
+    margin-bottom:20px;
+    padding-right:15%;
+    padding-top:12px;
+    font-family:Assistant-Bold;
+    font-size:2.2rem;
+    background: linear-gradient(90deg, rgba(22, 56, 111, 1) 0%, rgba(0, 168, 168, 1) 100%);
+}
+
+.section1{
+    float:right;
+    width:100%;
+    margin-top:10px
+}
+
+.section2{
+    float:right;
+    width:100%;
+    margin-top:10px;
+    padding-bottom:20px
+}
+
+.logoLeft{
+    float:left;
+    margin-left:5%
+}
+
+.logoRight{
+    float:right;
+    margin-right:10%;
+    margin-top:10px
+}
+
+.inner1{
+    margin:0px auto;
+    width:80%;
+    color:white
+}
+
+.forumTitle{
+    float:right;
+    width:100%;
+    font-family:Assistant-Bold;
+    font-size:2rem
+}
+
+.forumData{
+    float:right;
+    width:100%;
+    font-size:1.33rem;
+    margin-bottom:20px;
+    color:rgba(127, 205, 186, 1)
+}
+
+.forumData .oneItem, .forumDetails .oneItem{
+    float:right;
+    margin-left:5px
+}
+
+.forumDetails{
+    float:right;
+    width:100%;
+    font-size:1.33rem;
+    margin-bottom:20px
+}
+
+.itemHour{
+    float:right;
+    width:10%;
+    margin-left:5%;
+    height:47px;
+    border-radius:10px;
+    background: linear-gradient(90deg, #0084AC 0%, #00D2B4 100%);
+    text-align:center;
+    font-family:Assistant-Bold;
+    font-size:1.4rem;
+    padding-top:8px
+}
+
+.itemData{
+    float:right;
+    width:85%;
+    padding-bottom:28px;
+    padding-top:10px;
+    border-bottom:1px solid rgba(255,255,255,0.5)
+}
+
+.itemDataLast{
+    float:right;
+    width:85%;
+    padding-bottom:28px;
+    padding-top:10px;
+}
+
+.itemData .text{
+    float:right;
+    width:100%;
+    font-family:Assistant-Bold;
+    font-size:1.8rem
+}
+
+.itemDataLast .text{
+    float:right;
+    width:100%;
+    font-family:Assistant-Bold;
+    font-size:1.8rem
+}
+
+
+
+.itemParticipant{
+    float:right;
+    width:100%;
+    font-family:Assistant-SemiBold;
+    font-size:1.33rem
+}
+
+.itemParticipant .oneItem{
+    float:right;
+    margin-left:5px
+}
+
+.sessionRight{
+    float:right;
+    width:10%;
+    margin-left:5%
+}
+
+.sessionTitle{
+    float:right;
+    width:100%;
+    font-family:Assistant-Bold;
+    font-size:2rem;
+    color:rgba(185, 232, 29, 1)
+}
+
+.sponsor1{
+    float:right;
+    width:100%;
+    font-family:Assistant-SemiBold;
+    font-size:1.1rem;
+    color:rgba(127, 205, 186, 1)
+}
+
+.footer1{
+    float:right;
+    width:100%;
+    margin-top:10px;
+    background-color:white;
+    padding-top:20px;
+    padding-bottom:20px
+}
+
+.inner2{
+    margin:0px auto;
+    width:80%;
+    color:black
+}
+
+.toForm{
+    float:left;
+    margin-top:-50px;
+    height:60px;
+    background-color:rgba(185, 232, 29, 1);
+    border-radius:30px;
+    width:200px;
+    font-size:2.2rem;
+    color:rgba(0, 66, 140, 1);
+    font-family:Assistant-SemiBold;
+    text-align:center;
+    padding-top:5px;
+}
+
+.footer1 .logo{
+    float:right;
+    margin-left:15px;
+    margin-top:10px
+}
+
+.footer1 .thanks{
+    float:right;
+    margin-top:20px
+}
+
+.sponsors{
+    float:right;
+    width:100%
+}
+
+.sponsors .oneItem{
+    float:right;
+    width:16.6%;
+    text-align:center;
+}
+
+.sponsors .oneItem img{
+    max-width:90%;
+}
+
+.underBanner{
+    float:right;
+    width:100%;
+    margin-top:20px
+}
+
+.underBanner .link{
+    float:left;
+    margin-left:10%
+}
+
+.underBanner .link .button{
+    width:231px;
+    height:50px;
+    border:2px solid white;
+    border-radius:25px;
+    text-align:center;
+    padding-top:7px;
+    color:white;
+    font-size:1.33rem
+}
+
+.underBanner .clientLogo{
+    float:right;
+    margin-right:10%
+}
+
+.formArea{
+    float:right;
+    width:100%;
+    margin-top:10px;
+    margin-bottom:30px
+}
+
+.formArea .title{
+    float:right;
+    width:100%;
+    height:65px;
+    background-color:rgba(235, 242, 251, 1);
+    padding:15px
+}
+
+.formArea .title .text{
+    float:right;
+    color:rgba(79, 79, 79, 1);
+    font-family:Assistant-SemiBold;
+    font-size:1.66rem;
+}
+
+.formArea .title .arrow{
+    float:left;
+    margin-top:10px
+}
+
+.formArea .data{
+    float:right;
+    width:100%;
+    background-color:rgba(255, 255, 255, 1);
+    padding-left:50px;
+    padding-right:50px;
+    padding-top:30px;
+    padding-bottom:30px
+}
+
+.formArea .data .oneSection{
+    float:right;
+    width:100%;
+    margin-bottom:40px
+}
+
+.formArea .data .oneSection .smallField{
+    float:right;
+    width:22%;
+    margin-left:4%
+}
+
+.formArea .data .oneSection .smallField:last-child{
+    margin-left:0px;
+}
+
+.formArea .data .oneSection .bigField{
+    float:right;
+    width:48%;
+    margin-left:4%
+}
+
+.formArea .data .oneSection .bigField:last-child{
+    margin-left:0px;
+}
+
+select, input{
+    border:0px;
+    border-bottom:1px solid rgba(79, 79, 79, 1);
+    height:32px;
+    width:100%;
+    background-color:transparent;
+    font-size:1.3rem;
+    font-family:Assistant-SemiBold
+}
+
+.formArea .data .oneSection .radioArea1{
+    float:right;
+    width:80%;
+    height:37px;
+    text-align:center
+}
+
+.formArea .data .oneSection .radioArea2{
+    float:right;
+    width:80%;
+    height:32px;
+    text-align:center
+}
+
+.formArea .data .oneSection .radioLabel{
+    float:right;
+    width:100%;
+    font-size:0.9rem;
+    color:rgba(79, 79, 79, 1);
+    margin-bottom:2px;
+    margin-top:-15px
+}
+
+.radioRightSelected{
+    float:right;
+    width:33.3%;
+    height:100%;
+    background-color:rgba(113, 113, 113, 1);
+    border-top-right-radius:20px;
+    border-bottom-right-radius:20px;
+    padding-top:5px
+}
+
+.radioRight{
+    float:right;
+    width:33.3%;
+    height:100%;
+    border:1px solid rgba(113, 113, 113, 1);
+    color:rgba(113, 113, 113, 1);
+    border-top-right-radius:20px;
+    border-bottom-right-radius:20px;
+    padding-top:5px
+}
+
+.radioCenterSelected{
+    float:right;
+    width:33.3%;
+    height:100%;
+    background-color:rgba(113, 113, 113, 1);
+    border-right:0px;
+    padding-top:5px;
+}
+
+.radioCenter{
+    float:right;
+    width:33.3%;
+    height:100%;
+    background-color:transparent;
+    border:1px solid rgba(113, 113, 113, 1);
+    border-right:0px;
+    padding-top:5px;
+    color:rgba(113, 113, 113, 1)
+}
+
+.radioLeft{
+    float:right;
+    width:33.3%;
+    height:100%;
+    background-color:transparent;
+    border:1px solid rgba(113, 113, 113, 1);
+    border-right:0px;
+    border-top-left-radius:20px;
+    border-bottom-left-radius:20px;
+    padding-top:5px;
+    color:rgba(113, 113, 113, 1)
+}
+
+.radioLeftSelected{
+    float:right;
+    width:33.3%;
+    height:100%;
+    background-color:rgba(113, 113, 113, 1);
+    border-right:0px;
+    border-top-left-radius:20px;
+    border-bottom-left-radius:20px;
+    padding-top:5px;
+}
+
+.formArea .data .oneSection .info{
+    float:right;
+    width:100%;
+    color:rgba(79, 79, 79, 1)
+}
+
+.sendButton{
+    float:left;
+    width:206px;
+    height:58px;
+    border-radius:30px;
+    background-color:white;
+    color:rgba(22, 56, 111, 1);
+    font-family:Assistant-SemiBold;
+    font-size:1.66rem;
+    text-align:center;
+    padding-top:10px;
+    cursor:pointer
+}
+
+.emptySpace{
+    float:right;
+    width:100%;
+    height:40px
+}
+
+.footer2{
+    float:right;
+    width:100%;
+    margin-top:10px;
+    background-color:#000;
+    padding-top:40px;
+    padding-bottom:40px
+}
+
+.footer2 .inner{
+    margin:0px auto;
+    width:80%;
+    color:#FFF
+}
+
+.footer2 .oneSection{
+    float:right;
+    width:33%;
+    margin-left:50px
+}
+
+.r100{
+    float:right;
+    width:100%
+}
+
+.footer2 .social{
+    float:right;
+    width:35px;
+    margin-left:10px
+}
+
+.footer2 .links{
+    float:right;
+    width:100%;
+    margin-top:20px;
+    font-size:1.1rem
+}
+
+.footer2 .links .oneItem{
+    float:right;
+    margin-left:20px
+}
+
+.footer2 .leftLogo{
+    float:left
+}

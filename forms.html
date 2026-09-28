@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="css/stylesheet.css">
+    <title>IMKNASIM - טפסים</title>
+    <script>
+        $(document).ready(function(){
+            $(".arrowImage").click(function(){
+                x = this.id;
+                y = x.charAt(1);
+                $("#d"+y+"").slideToggle();
+                z = document.getElementById(x).src;
+                w = z.indexOf("arrowUp");
+                if (w>0)
+                    document.getElementById(x).src = "cut/arrowDown.png";
+                else
+                    document.getElementById(x).src = "cut/arrowUp.png";
+            })
+        });
+    </script>
+</head>
+<body>
+    <div class="banner">
+        <img src="cut/banner.png">
+    </div>
+    <div class="underBanner">
+        <div class="link">
+            <a href="agenda.html">
+               <div class="button">לצפייה בתכנית הכנס</div>
+            </a>
+        </div>
+        <div class="clientLogo"><img src="cut/clientLogo.png"></div>
+    </div>
+    <div class="section1">
+        <div class="inner1">
+            <div class="forumTitle">
+                פורום החורף של החוג הישראלי לאונקולוגיה של השד
+            </div>
+            <div class="forumDetails">
+                <div class="oneItem">14-15 באוקטובר 2026</div>
+                <div class="oneItem">|</div>
+                <div class="oneItem">מלון אלמה לאומנויות, זכרון יעקב</div>
+            </div>
+            <div class="formArea">
+                <div class="title">
+                    <div class="text">פרטים אישיים</div>
+                    <div class="arrow"><img class="arrowImage" id="i1" src="cut/arrowUp.png"></div>
+                </div>
+                <div id="d1" class="data">
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <select >
+                                <option value="0">תואר</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <input  value="שם פרטי">
+                        </div>
+                        <div class="smallField">
+                            <input  value="שם משפחה">
+                        </div>
+                        <div class="smallField">
+                            <input  value="שם באנגלית">
+                        </div>
+                    </div>
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <div class="radioArea1">
+                                <div class="radioRight">
+                                    זכר
+                                </div>
+                                <div class="radioCenterSelected">
+                                    נקבה
+                                </div>
+                                <div class="radioLeft">
+                                    אחר
+                                </div>
+                            </div>
+                        </div>
+                        <div class="smallField">
+                            <input  value="תאריך לידה">
+                        </div>
+                        <div class="smallField">
+                            <input  value="מספר ת.ז / דרכון">
+                        </div>
+                        <div class="smallField">
+                            <input  value="דואר אלקטרוני">
+                        </div>
+                    </div>
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <input  value="טלפון">
+                        </div>
+                        <div class="smallField">
+                            <input  value="שלוחה">
+                        </div>
+                        <div class="smallField">
+                            <input  value="טלפון נייד">
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">מדינה</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <select >
+                                <option value="0">עיר</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">רחוב</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <input  value="מספר">
+                        </div>
+                        <div class="smallField">
+                            <input  value="מיקוד">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="formArea">
+                <div class="title">
+                    <div class="text">מקצוע</div>
+                    <div class="arrow"><img class="arrowImage" id="i2" src="cut/arrowUp.png"></div>
+                </div>
+                <div id="d2" class="data">
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <select >
+                                <option value="0">התמחות</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">התמחותת משנה</option>
+                            </select>
+                        </div>
+                        <div class="bigField">
+                            <input  value="תפקיד">
+                        </div> 
+                    </div>
+                    <div class="oneSection">
+                        <div class="bigField">
+                            <input  value="מקום עבודה">
+                        </div> 
+                        <div class="bigField">
+                            <input  value="מחלקה">
+                        </div> 
+                    </div>
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <input  value="טלפון">
+                        </div>
+                        <div class="smallField">
+                            <input  value="שלוחה">
+                        </div>
+                        <div class="smallField">
+                            <input  value="טלפון נייד">
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">מדינה</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <select >
+                                <option value="0">מוסד / ארגון</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <input  value="מספר רשיון מקצועי">
+                        </div>   
+                    </div>
+                </div>
+            </div>
+            <div class="formArea">
+                <div class="title">
+                    <div class="text">סוג השתתפות</div>
+                    <div class="arrow"><img class="arrowImage" id="i3" src="cut/arrowUp.png"></div>
+                </div>
+                <div id="d3" class="data">
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <select >
+                                <option value="0">סוג המשתתף</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">אופן השתתפות</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <div class="radioLabel">השתתפות מלאה</div>
+                            <div class="radioArea2">
+                                <div class="radioRightSelected">
+                                    כן
+                                </div>
+                                <div class="radioLeft">
+                                    לא
+                                </div>
+                            </div>
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">ימי השתתפות</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <select >
+                                <option value="0">השתתפות במושבים</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">פעילויות מיוחדות</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="formArea">
+                <div class="title">
+                    <div class="text">לינה</div>
+                    <div class="arrow"><img class="arrowImage" id="i4" src="cut/arrowUp.png"></div>
+                </div>
+                <div id="d4" class="data">
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <div class="radioLabel">האם נדרשת לינה</div>
+                            <div class="radioArea2">
+                                <div class="radioRight">
+                                    כן
+                                </div>
+                                <div class="radioLeftSelected">
+                                    לא
+                                </div>
+                            </div>
+                        </div>
+                        <div class="smallField">
+                            <input  value="תאריך CHECKIN">
+                        </div>
+                        <div class="smallField">
+                            <input  value="תאריך CHECKOUT">
+                        </div>
+                        <div class="smallField">
+                            <div class="info">
+                            מספר לילות: 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <select >
+                                <option value="0">סוג חדר</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <div class="radioLabel">שותף לחדר</div>
+                            <div style="float:right;width:80%;height:32px;text-align:center">
+                                <div class="radioRightSelected">
+                                    כן
+                                </div>
+                                <div class="radioLeft">
+                                    לא
+                                </div>
+                            </div>
+                        </div>
+                        <div class="smallField">
+                            <div class="radioLabel">ארוחת בוקר</div>
+                            <div class="radioArea2">
+                                <div class="radioRightSelected">
+                                    כן
+                                </div>
+                                <div class="radioLeft">
+                                    לא
+                                </div>
+                            </div>
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">אופן התשלום</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="formArea">
+                <div class="title">
+                    <div class="text">תשלום</div>
+                    <div class="arrow"><img class="arrowImage" id="i5" src="cut/arrowUp.png"></div>
+                </div>
+                <div id="d5" class="data">
+                    <div class="oneSection">
+                        <div class="smallField">
+                            <select >
+                                <option value="0">סוג הרשמה</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <div class="info">
+                            מחיר: 
+                            </div>
+                        </div>
+                        <div class="smallField">
+                            <select >
+                                <option value="0">אמצעי תשלום</option>
+                            </select>
+                        </div>
+                        <div class="smallField">
+                            <div class="info">
+                            סטטוס: 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="sendButton">שליחה</div>
+        </div>
+        <div class="emptySpace"></div>
+    </div>
+    <div class="footer2">
+        <div class="inner">
+            <div class="oneSection">
+                <div class="r100">מגדל השחר, אריאל שרון 4 גבעתיים, ישראל</div>
+                <div class="r100">03-6081520</div>
+                <div class="r100">03-6081520</div>
+                <div class="r100">office@imknasim.co.il</div>
+                <div class="r100">www.imknasim.co.il</div>
+            </div>
+            <div class="oneSection">
+                <div class="r100">
+                    <div class="social"><img src="cut/facebook.png" style="width:100%"></div>
+                    <div class="social"><img src="cut/whatsapp.png" style="width:100%"></div>
+                    <div class="social"><img src="cut/instegram.png" style="width:100%"></div>
+                </div>
+                <div class="links">
+                    <div class="oneItem">הצהרת נגישות</div>
+                    <div class="oneItem">מדיניות פרטיות</div>
+                </div>
+            </div>
+            <div class="leftLogo"><img src="cut/selfLogoForms.png"></div>
+        </div>
+    </div>
+</body>
+</html>

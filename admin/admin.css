@@ -1,0 +1,65 @@
+﻿body {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	background-color:#ffffff;
+	border: 0;
+	font-family:Arial;
+	color:#000000;
+	font-size:12px;
+}
+a
+{
+	font-family:Arial;
+	color:#336699;
+	font-size:14px;
+	text-decoration:none;
+}
+a:hover
+{
+	font-family:Arial;
+	color:#336699;
+	font-size:14px;
+	text-decoration:underline;
+}
+table
+{
+	background-color: #ffffff;
+	font-size:12px;
+	color:#336699;
+	font-family:Arial;
+}
+.submit
+{
+	border: solid 1 #990000;
+	font-family:Arial;
+	font-size:14px;
+	color:#990000;
+	background-color:#dddddd;
+}
+.text_blue
+{
+	font-family:Arial;
+	color:#336699;
+	font-size:14px;
+}
+.text_red
+{
+	font-family:Arial;
+	color:#990000;
+	font-size:14px;
+}
+.text_white
+{
+	color:White;
+	font-family:Arial;
+	font-size:16px;
+	font-weight:bold
+}
+.oblig
+{
+	color:Red;
+	font-size:15px;
+	font-family:Arial;
+}

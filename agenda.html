@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="css/stylesheet.css">
+    <title>IMKNASIM - אג'נדה</title>
+</head>
+<body onload="getData()">
+    <div class="banner">
+        <img src="cut/banner.png">
+    </div>
+    <div class="section1">
+        <div class="logoLeft"><img src="cut/selfLogo.png"></div>
+        <div class="logoRight"><img src="cut/clientLogo.png"></div>
+    </div>
+    <div class="section2">
+        <div class="inner1">
+            <div id="forumTitle" class="forumTitle">
+                &nbsp;
+            </div>
+            <div class="forumData">
+                <div id="when" class="oneItem">&nbsp;</div>
+                <div class="oneItem">|</div>
+                <div id="where" class="oneItem">&nbsp;</div>
+            </div>
+            <div id="allData" style="float:right;width:100%">
+
+            </div>
+            <!--<div class="split">
+                אולם ראשי
+            </div>
+            <div class="section1">
+                <div class="itemHour">08:00-09:00</div>
+                <div class="itemData" style="border:0px">
+                    <div class="text">
+                        התכנסות וקבלת פנים
+                    </div>
+                </div>
+            </div>
+            <div class="session">
+                מושב א
+            </div>
+            <div class="section1">
+                <div class="itemHour">09:00-09:30</div>
+                <div class="itemData">
+                    <div class="text">
+                        טיפולים פורצי דרך בסרטן שלפוחית השתן - עידן חדש
+                    </div>
+                    <div class="itemParticipant">
+                        <div class="oneItem">ד"ר דוד סריד</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">מנהל שירות לגדולי מערכת שתן</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">ב”ח סורסקי, איכילוב, ת”א</div>
+                    </div>
+                    <div class="oneItem">
+                        בחסות חברת Astellas
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">09:30-10:00</div>
+                <div class="itemData">
+                    <div class="text">
+                        סוגרים את הפער: טיפולים פריאופרטיביים בסרטן שלפוחית שתן חודר שריר
+                    </div>
+                    <div class="itemParticipant">
+                        <div class="oneItem">פרופ' רענן ברגר</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">מנהל מרכז חוסידמן לרפואת הסרטן</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">ב”ח שיבא</div>
+                    </div>
+                    <div class="oneItem">
+                         בחסות חברת Astellas
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">10:00-10:30</div>
+                <div class="itemData">
+                    <div class="text">
+                        מה התזמון ומי החולה האידיאלי ללוטיציום
+                    </div>
+                    <div class="itemParticipant">
+                        <div class="oneItem">דר’ אביבית פאר</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">מנהלת יחידה למחקרים קליניים ויחידה לגדולי מערכת שתן</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">ב"ח רמב"ם</div>
+                    </div>
+                    <div class="oneItem">
+                        בחסות חברת Novartis Pharma Israel 
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">10:30-11:00</div>
+                <div class="itemData">
+                    <div class="text">
+                        +BRCA בסרטן ערמונית גרורתי PARP הקדמת מעכבי<Br>
+                        מהנתונים החדשים לפרקטיקה : רפואה מותאמת אישית מוקדם יותר
+                    </div>
+                    <div class="itemParticipant">
+                        <div class="oneItem">דר’ מורן גדות</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">רופאה בכירה ביחידה לגדולי מערכת שתן</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">ב”ח שיבא, תל השומר</div>
+                    </div>
+                    <div class="oneItem">
+                        בחסות חברת Johnson & Johnson 
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">11:00-11:30</div>
+                <div class="itemData" style="border:0px">
+                    <div class="text">
+                        הפסקת קפה
+                    </div>
+                </div>
+            </div>
+            <div class="session">
+                מושב ב
+            </div>
+            <div class="section1">
+                <div class="itemHour">11:30-12:00</div>
+                <div class="itemData">
+                    <div class="text">
+                        Biomarker driven treatment in mAPMN (mHSPC) prostate cancer
+                    </div>
+                    <div class="itemParticipant">
+                        <div class="oneItem">ד"ר דניאל קייזמן</div>
+                        
+                    </div>
+                    <div class="oneItem">
+                        בחסות חברת Astrazeneca 
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">12:00-12:30</div>
+                <div class="itemData">
+                    <div class="text">
+                       העדכונים בטיפול בסרטן שלפוחית שאינו חודר שריר (MNIBC)
+                    </div>
+                    <div class="itemParticipant">
+                        <div class="oneItem">ד"ר איתי שגיא</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">מנהל מחלקת אורולוגיה</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">ב”ח וולפסון, חולון</div>
+                    </div>
+                    <div class="oneItem">
+                        בחסות חברת Ferring Pharmaceuticals
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">12:30-13:00</div>
+                <div class="itemData">
+                    <div class="text">
+                        Pathology-Based AI in Prostate Cancer: Clinical Evidence and Future Perspectives
+                    </div>
+                    <div class="itemParticipant">
+                        <div class="oneItem">ד"ר ליאת המר</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">מנהלת תחום מחקר דרכי השתן</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">במכון הקרינה ממרכז רפואי שיבא תל השומר</div>
+                    </div>
+                    <div class="oneItem">
+                        בחסות חברת Rhenium Oncotest
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">13:00-13:30</div>
+                <div class="itemData">
+                    <div class="text">
+                        Refining the role of molecular testing in the treatment of mHSPC
+                    </div>
+                    <div class="itemParticipant">
+                        <div class="oneItem">אמיר אברמוביץ</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">מנהל השירות המשולב לגידולי מערכת השתן והמין. המערך האורולוגי</div>
+                        <div class="oneItem">|</div>
+                        <div class="oneItem">המרכז הרפואי שערי צדק</div>
+                    </div>
+                    <div class="oneItem">
+                        בחסות חברת Rhenium Oncotest 
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">13:30-13:45</div>
+                <div class="itemData">
+                    <div class="text">
+                        סיכום
+                    </div>
+                </div>
+            </div>
+            <div class="section1">
+                <div class="itemHour">13:45</div>
+                <div class="itemDataLast">
+                    <div class="text">
+                        ארוחת צהריים ופיזור
+                    </div>
+                </div>
+            </div>-->
+        </div>
+    </div>
+    <div class="footer1">
+        <div class="inner2">
+            <a href="forms.html">
+                <div class="toForm">רישום</div>
+            </a>
+            <div class="logo"><img src="cut/selfLogoFooter.png"></div>
+            <div class="thanks">תודתנו לחברות התומכות והמציגות בכנס זה:</div>
+            <div id="sponsors" class="sponsors">
+                <!--<div class="oneItem">
+                    <img src="cut/logo1.png">
+                </div>
+                <div class="oneItem">
+                    <img src="cut/logo2.png">
+                </div>
+                <div class="oneItem">
+                    <img src="cut/logo3.png">
+                </div>
+                <div class="oneItem">
+                    <img src="cut/logo4.png">
+                </div>
+                <div class="oneItem">
+                    <img src="cut/logo5.png">
+                </div>
+                <div class="oneItem">
+                    <img src="cut/logo6.png">
+                </div>-->
+            </div>
+        </div>
+    </div>
+    <script>
+
+        var x;
+
+    function getParameterByName(name, url) {
+			if (!url) url = window.location.href;
+			name = name.replace(/[\[\]]/g, '\\$&');
+			var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+				results = regex.exec(url);
+			if (!results) return null;
+			if (!results[2]) return '';
+			return decodeURIComponent(results[2].replace(/\+/g, ' '));
+		}
+
+function changeColors() {
+    if (!x) return; // Guard clause in case x isn't loaded yet
+
+    var bkColor = x.bkcolor;
+    var textColor = x.textcolor;
+    var sessionColor = x.sessionColor;
+    var splitColor = x.splitColor;
+    var hoursLeft = x.hoursLeft;
+    var forumData = x.textColor2;
+    var bkButton = x.bkButton;
+
+    
+
+    document.body.style.backgroundColor = bkColor;
+    document.body.style.color = textColor;
+
+    document.querySelectorAll(".split").forEach(element => {
+        element.style.background = "linear-gradient(90deg, " + bkColor + " 0%, " + splitColor + " 100%)";
+        if (x.roundedcorners=="True") element.style.borderRadius = "10px";
+    });
+
+    document.querySelectorAll(".session").forEach(element => {
+        element.style.background = "linear-gradient(90deg, " + bkColor + " 0%, " + sessionColor + " 100%)";
+        if (x.roundedCorners=="True") element.style.borderRadius = "10px";
+    });
+
+    document.querySelectorAll(".itemHour").forEach(element => {
+        if (x.hoursframe=="True"){
+            element.style.background = "linear-gradient(90deg, " + sessionColor + " 0%, " + hoursLeft + " 100%)";
+        }else{
+            element.style.background = "transparent";
+            element.style.color = x.textcolor;  
+        }
+    });
+
+    var forumEl = document.querySelector(".forumData");
+    if (forumEl) forumEl.style.color = forumData;
+
+    var buttonEl = document.querySelector(".toForm");
+    if (buttonEl) buttonEl.style.backgroundColor = bkButton;
+}
+
+function getData() {
+    xx = getParameterByName("num");
+    var url = "server/getconference.asp?item="+xx+"";
+
+    $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "json", // Expects JSON back from the server
+        success: function (data2) {
+            // Parse only if response is returned as a string
+            x = (typeof data2 === "string") ? JSON.parse(data2) : data2;
+            console.log(x);
+            document.getElementById("forumTitle").innerHTML = x.theName || "";
+            document.getElementById("when").innerHTML = x.startdate || "";
+            document.getElementById("where").innerHTML = x.location || "";
+
+            var s = "";
+
+            for (let i = 0; i < x.days.length; i++) {
+                for (let j = 0; j < x.days[i].splits.length; j++) {
+                    for (let k = 0; k < x.days[i].splits[j].sessions.length; k++) {
+                        var session = x.days[i].splits[j].sessions[k];
+
+                        if (session.showInAgenda === "True") {
+                            s += "<div class='session'>" + session.theName + "</div>";
+                        }
+
+                        for (let l = 0; l < session.items.length; l++) {
+                            var item = session.items[l];
+
+                            s += "<div class='section1'>";
+                            s += "  <div class='itemHour'>" + item.fromHour + "-" + item.toHour + "</div>";
+                            s += "  <div class='itemData'>";
+                            s += "    <div class='text'>" + item.theName + "</div>";
+
+                           
+
+                            if (item.lecturers && item.lecturers.length > 0) {
+                                var lec = item.lecturers[0];
+                                s += "    <div class='itemParticipant'>";
+                                s += "      <div class='oneItem'>" + lec.theTitle + " " + lec.theName + "</div>";
+                                if (lec.theJob!="") s += "      <div class='oneItem'>|</div><div class='oneItem'>" + lec.theJob + "</div>";
+                                if (lec.theOrg!="") s += "      <div class='oneItem'>|</div<div class='oneItem'>" + lec.theOrg + "</div>";
+                                s += "    </div>";
+                            }
+                            if (item.theSponsor!=""){
+                                s += "    <div class='oneItem'>בחסות חברת "+item.theSponsor+"</div>";
+                            }
+
+                            s += "  </div>"; // Close itemData
+                            s += "</div>";   // Close section1
+                        }
+                    }
+                }
+            }
+
+            document.getElementById("allData").innerHTML = s;
+            s1 = "";
+            for (i=0;i<x.sponsors.length;i++){
+                s1 = s1 + "<div class='oneItem'><img src='images\\"+x.sponsors[i].theImage+"'></div>"
+            }
+            document.getElementById("sponsors").innerHTML = s1;
+            setTimeout(changeColors, 1000);
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            console.error("Failed to fetch data:", thrownError);
+        }
+    });
+}
+    </script>
+</body>
+</html>
