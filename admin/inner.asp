@@ -106,12 +106,28 @@ select case thetable
 	    var_num = "theindex"
 	    var_title = "thename"
 	    var_title1 = ""    
+    case "[imknasim].[dbo].[nutrition]"
+	    var_num = "theindex"
+	    var_title = "thename"
+	    var_title1 = ""    
+    case "[imknasim].[dbo].[accesstype]"
+	    var_num = "theindex"
+	    var_title = "thename"
+	    var_title1 = ""    
+    case "[imknasim].[dbo].[documents]"
+	    var_num = "theindex"
+	    var_title = "thename"
+	    var_title1 = ""    
 end select
 
 
 
 if thetable<>"" then
-    if var_title1="" then
+    if thetable="[imknasim].[dbo].[fields]" then
+        sql = "SELECT "&var_num&", "&var_title&" FROM "&thetable
+        if request("item")&"a"<>"a" then sql = sql & " where fieldsection="&request("item")
+        sql =  sql & " order by "&var_title
+    elseif var_title1="" then
 		sql = "SELECT "&var_num&", "&var_title&" FROM "&thetable&" order by "&var_title
     else
         sql = "SELECT "&var_num&", "&var_title&", "&var_title1&" FROM "&thetable&" order by "&var_title
@@ -135,7 +151,29 @@ end if
     <div style="float:right;width:75%;box-sizing:border-box;padding:10px">
     <%
     if thetable<>"" then
-    
+    if thetable="[imknasim].[dbo].[fields]" then
+        if request("item")&"a"="a" then
+            theItem=0
+        else
+            theItem=request("item")
+        end if
+        %>
+        <div style="float:right;width:100%">
+        <div style="float:right;width:12.5%"><input name="section" value="0" type="radio" checked onclick="location.href='inner.asp?page=<%=request("page")%>'">הכל</div>
+        <%
+        sql1 = "select * from section order by theOrder"
+        r1.open sql1,strconn,1,3
+        while not r1.eof
+           %>
+           <div style="float:right;width:12.5%"><input name="section" value="<%=r1("theIndex")%>" type="radio" onclick="location.href='inner.asp?page=<%=request("page")%>&item=<%=r1("theIndex")%>'" <%if r1("theIndex")=int(theItem) then response.write "checked"%>><%=r1("theName")%></div>
+           <% 
+           r1.movenext
+        wend
+        r1.close
+        %>
+        </div>
+        <%
+    end if
 
     while not r.eof
         

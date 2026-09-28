@@ -108,6 +108,21 @@
     pTitle22 = "thename"
     pIndex22 = "theIndex"
 
+    page23 = "[imknasim].[dbo].[nutrition]"
+    pName23 = "העדפות מזון"
+    pTitle23 = "thename"
+    pIndex23 = "theIndex"
+
+    page24 = "[imknasim].[dbo].[accesstype]"
+    pName24 = "סוגי נגישות"
+    pTitle24 = "thename"
+    pIndex24 = "theIndex"
+
+    page25 = "[imknasim].[dbo].[documents]"
+    pName25 = "מסמכים"
+    pTitle25 = "thename"
+    pIndex25 = "theIndex"
+
     page8 = "[imknasim].[dbo].[fields]"
     pName8 = "שדות"
     pTitle8 = "thename"
