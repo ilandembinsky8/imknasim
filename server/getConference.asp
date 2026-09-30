@@ -71,12 +71,13 @@ if not r.eof then
 			firstItem=false
 			r1.movenext
 		wend
+		s=s&"]}]}"
 		r1.close
 		firstItem3 = false
 	r3.movenext
 	wend
 	r3.close
-	s = s & "]}]}],""sponsors"":["
+	s = s & "],""sponsors"":["
 	sql3 = "select * from consponser where conference="&request("item")
 	r3.open sql3,strconn,1,3
 	firstItem="True"
