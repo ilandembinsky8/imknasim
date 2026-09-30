@@ -11,16 +11,9 @@ sql = "select * from [imknasim].[dbo].[users] where login='"&login&"' and passwo
 r.open sql,strconn,1,3
 if not r.eof then
     session("user")=login
-    if r("userType")=1 then 
-        session("userType")="admin"
-    else
-        session("userType")="user"
-    end if
     response.redirect "inner.asp"
-    'response.write r("thename")
 else
     session("user")=""
     response.redirect "index.asp"
-    'response.write "failure"
 end if
 %>

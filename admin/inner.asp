@@ -182,10 +182,13 @@ end if
         if var_title2<>"" then response.write "<span style='color:white'>--</span>"&r(var_title2)
         response.write "</a>&nbsp;&nbsp;&nbsp;"
         if request("page")="[imknasim].[dbo].[conference]" then
-            response.write "<a style='font-size:24px;line-height:135%;direction:rtl;font-weight:bold;' href='forumDetails.asp?page="&thetable&"&num="&r(var_num)&"'>פרטים</a>&nbsp;&nbsp;&nbsp;"
-            response.write "<a style='font-size:24px;line-height:135%;direction:rtl;font-weight:bold;' href='../agenda.html?num="&r(var_num)&"' target='_blank'>צפייה</a>&nbsp;&nbsp;&nbsp;"
+            response.write "<a style='font-size:24px;line-height:135%;direction:rtl;font-weight:bold;' href='forumDetails.asp?page="&thetable&"&num="&r(var_num)&"'>פרטי אג'נדה</a>&nbsp;&nbsp;&nbsp;"
+            response.write "<a style='font-size:24px;line-height:135%;direction:rtl;font-weight:bold;' href='../agenda.html?num="&r(var_num)&"' target='_blank'>צפיה באג'נדה</a>&nbsp;&nbsp;&nbsp;"
+            response.write "<a style='font-size:24px;line-height:135%;direction:rtl;font-weight:bold;' href='formDetails.asp?page="&thetable&"&num="&r(var_num)&"'>פרטי טופס</a>&nbsp;&nbsp;&nbsp;"
+            response.write "<a style='font-size:24px;line-height:135%;direction:rtl;font-weight:bold;' href='../forms.html?num="&r(var_num)&"' target='_blank'>צפיה בטופס</a>&nbsp;&nbsp;&nbsp;"
+
         end if
-        response.write "<a style='font-size:24px;line-height:135%;direction:rtl;font-weight:bold;' href='duplicate.asp?page="&thetable&"&num="&r(var_num)&"&all="&allFields&"'>שכפל</a>&nbsp;&nbsp;&nbsp;"
+        'response.write "<a style='font-size:24px;line-height:135%;direction:rtl;font-weight:bold;' href='duplicate.asp?page="&thetable&"&num="&r(var_num)&"&all="&allFields&"'>שכפל</a>&nbsp;&nbsp;&nbsp;"
         
         response.write "<br>"
         
