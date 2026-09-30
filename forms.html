@@ -48,6 +48,7 @@
 
             </div>
             <div class="sendButton" onclick="validateForm()">שליחה</div>
+            <div id="sendError" class="sendError"></div>
         </div>
         <div class="emptySpace"></div>
     </div>
@@ -139,7 +140,7 @@ function buildForm(x) {
             var f = sec.fields[k];
 
             if (f.fieldType == "3") {
-                // בחירה מרובה תופסת שורה משל עצמה
+                // a multi choice field takes a row of its own
                 if (inRow > 0) { s += "<div class='oneSection'>" + row + "</div>"; row = ""; inRow = 0; }
                 s += "<div class='oneSection'>" + buildMultiField(f) + "</div>";
             } else {
@@ -240,7 +241,7 @@ function validateForm() {
         if (t == "3") {
             val = $(el).find("input:checked").length > 0 ? "x" : "";
         } else if (t == "4") {
-            val = "x";   // כן/לא תמיד מחזיק ערך
+            val = "x";   // a yes/no control always holds a value
         } else {
             val = (el.value || "").replace(/^\s+|\s+$/g, "");
             if (t == "2" && val == "0") val = "";
@@ -264,8 +265,76 @@ function validateForm() {
         return false;
     }
 
-    // שמירת ההרשמה תמומש בשלב נפרד
+    submitForm();
     return true;
+}
+
+// collect every control into f<fieldId> pairs and post them to the server
+function submitForm() {
+    var data = { item: x.theNumber };
+
+    $("[data-field]").each(function () {
+        var el = this;
+        var id = el.getAttribute("data-field");
+        var t = el.getAttribute("data-type");
+
+        if (t == "3") {
+            var picked = [];
+            $(el).find("input:checked").each(function () { picked.push(this.value); });
+            data["f" + id] = picked.join(",");
+        } else if (t == "4") {
+            data["f" + id] = el.getAttribute("data-value");
+        } else {
+            data["f" + id] = (el.value || "").replace(/^\s+|\s+$/g, "");
+        }
+    });
+
+    setSending(true);
+    document.getElementById("sendError").innerHTML = "";
+
+    $.ajax({
+        url: "server/saveForm.asp",
+        type: "POST",
+        data: data,
+        dataType: "json",
+        success: function (res) {
+            var o = (typeof res === "string") ? JSON.parse(res) : res;
+            if (o && o.ok === "True") {
+                showThanks(o.theNumber);
+            } else {
+                setSending(false);
+                document.getElementById("sendError").innerHTML = "השליחה נכשלה. אנא נסו שוב.";
+                console.error("save failed:", o);
+            }
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            setSending(false);
+            document.getElementById("sendError").innerHTML = "השליחה נכשלה. אנא נסו שוב.";
+            console.error("save failed:", thrownError);
+        }
+    });
+}
+
+// lock the button while the request is in flight so one click is one registration
+function setSending(on) {
+    var btn = document.querySelector(".sendButton");
+    if (!btn) return;
+    btn.style.pointerEvents = on ? "none" : "auto";
+    btn.style.opacity = on ? "0.6" : "1";
+    btn.innerHTML = on ? "שולח..." : "שליחה";
+}
+
+function showThanks(num) {
+    var s = "";
+    s += "<div class='forumTitle'>" + (x.theName || "") + "</div>";
+    s += "<div class='formArea'>";
+    s += "  <div class='data' style='text-align:center'>";
+    s += "    <div style='font-size:1.8rem;color:rgba(79,79,79,1);margin-bottom:12px'>ההרשמה נקלטה בהצלחה</div>";
+    s += "    <div style='font-size:1.3rem;color:rgba(79,79,79,1)'>מספר הרשמה: " + num + "</div>";
+    s += "  </div>";
+    s += "</div>";
+    document.querySelector(".inner1").innerHTML = s;
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function checkValidation(v, val) {

@@ -556,6 +556,15 @@ select, input{
     border:1px solid rgba(211, 47, 47, 1)
 }
 
+.sendError{
+    float:left;
+    width:100%;
+    text-align:left;
+    margin-top:10px;
+    font-size:1.1rem;
+    color:rgba(255, 190, 190, 1)
+}
+
 .sendButton{
     float:left;
     width:206px;
