@@ -8,327 +8,46 @@
     <title>IMKNASIM - טפסים</title>
     <script>
         $(document).ready(function(){
-            $(".arrowImage").click(function(){
-                x = this.id;
-                y = x.charAt(1);
+            $(document).on("click", ".arrowImage", function(){
+                x1 = this.id;
+                y = x1.substring(1);
                 $("#d"+y+"").slideToggle();
-                z = document.getElementById(x).src;
+                z = document.getElementById(x1).src;
                 w = z.indexOf("arrowUp");
                 if (w>0)
-                    document.getElementById(x).src = "cut/arrowDown.png";
+                    document.getElementById(x1).src = "cut/arrowDown.png";
                 else
-                    document.getElementById(x).src = "cut/arrowUp.png";
+                    document.getElementById(x1).src = "cut/arrowUp.png";
             })
         });
     </script>
 </head>
-<body>
+<body onload="getData()">
     <div class="banner">
-        <img src="cut/banner.png">
+        <img id="banner" src="cut/banner.png" onerror="this.onerror=null;this.src='cut/banner.png'">
     </div>
     <div class="underBanner">
         <div class="link">
-            <a href="agenda.html">
+            <a id="toAgenda" href="agenda.html">
                <div class="button">לצפייה בתכנית הכנס</div>
             </a>
         </div>
-        <div class="clientLogo"><img src="cut/clientLogo.png"></div>
+        <div class="clientLogo"><img id="clientLogo" src="cut/clientLogo.png" onerror="this.onerror=null;this.src='cut/clientLogo.png'"></div>
     </div>
     <div class="section1">
         <div class="inner1">
-            <div class="forumTitle">
-                פורום החורף של החוג הישראלי לאונקולוגיה של השד
+            <div id="forumTitle" class="forumTitle">
+                &nbsp;
             </div>
             <div class="forumDetails">
-                <div class="oneItem">14-15 באוקטובר 2026</div>
+                <div id="when" class="oneItem">&nbsp;</div>
                 <div class="oneItem">|</div>
-                <div class="oneItem">מלון אלמה לאומנויות, זכרון יעקב</div>
+                <div id="where" class="oneItem">&nbsp;</div>
             </div>
-            <div class="formArea">
-                <div class="title">
-                    <div class="text">פרטים אישיים</div>
-                    <div class="arrow"><img class="arrowImage" id="i1" src="cut/arrowUp.png"></div>
-                </div>
-                <div id="d1" class="data">
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <select >
-                                <option value="0">תואר</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <input  value="שם פרטי">
-                        </div>
-                        <div class="smallField">
-                            <input  value="שם משפחה">
-                        </div>
-                        <div class="smallField">
-                            <input  value="שם באנגלית">
-                        </div>
-                    </div>
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <div class="radioArea1">
-                                <div class="radioRight">
-                                    זכר
-                                </div>
-                                <div class="radioCenterSelected">
-                                    נקבה
-                                </div>
-                                <div class="radioLeft">
-                                    אחר
-                                </div>
-                            </div>
-                        </div>
-                        <div class="smallField">
-                            <input  value="תאריך לידה">
-                        </div>
-                        <div class="smallField">
-                            <input  value="מספר ת.ז / דרכון">
-                        </div>
-                        <div class="smallField">
-                            <input  value="דואר אלקטרוני">
-                        </div>
-                    </div>
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <input  value="טלפון">
-                        </div>
-                        <div class="smallField">
-                            <input  value="שלוחה">
-                        </div>
-                        <div class="smallField">
-                            <input  value="טלפון נייד">
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">מדינה</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <select >
-                                <option value="0">עיר</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">רחוב</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <input  value="מספר">
-                        </div>
-                        <div class="smallField">
-                            <input  value="מיקוד">
-                        </div>
-                    </div>
-                </div>
+            <div id="allData" style="float:right;width:100%">
+
             </div>
-            <div class="formArea">
-                <div class="title">
-                    <div class="text">מקצוע</div>
-                    <div class="arrow"><img class="arrowImage" id="i2" src="cut/arrowUp.png"></div>
-                </div>
-                <div id="d2" class="data">
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <select >
-                                <option value="0">התמחות</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">התמחותת משנה</option>
-                            </select>
-                        </div>
-                        <div class="bigField">
-                            <input  value="תפקיד">
-                        </div> 
-                    </div>
-                    <div class="oneSection">
-                        <div class="bigField">
-                            <input  value="מקום עבודה">
-                        </div> 
-                        <div class="bigField">
-                            <input  value="מחלקה">
-                        </div> 
-                    </div>
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <input  value="טלפון">
-                        </div>
-                        <div class="smallField">
-                            <input  value="שלוחה">
-                        </div>
-                        <div class="smallField">
-                            <input  value="טלפון נייד">
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">מדינה</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <select >
-                                <option value="0">מוסד / ארגון</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <input  value="מספר רשיון מקצועי">
-                        </div>   
-                    </div>
-                </div>
-            </div>
-            <div class="formArea">
-                <div class="title">
-                    <div class="text">סוג השתתפות</div>
-                    <div class="arrow"><img class="arrowImage" id="i3" src="cut/arrowUp.png"></div>
-                </div>
-                <div id="d3" class="data">
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <select >
-                                <option value="0">סוג המשתתף</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">אופן השתתפות</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <div class="radioLabel">השתתפות מלאה</div>
-                            <div class="radioArea2">
-                                <div class="radioRightSelected">
-                                    כן
-                                </div>
-                                <div class="radioLeft">
-                                    לא
-                                </div>
-                            </div>
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">ימי השתתפות</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <select >
-                                <option value="0">השתתפות במושבים</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">פעילויות מיוחדות</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
-            <div class="formArea">
-                <div class="title">
-                    <div class="text">לינה</div>
-                    <div class="arrow"><img class="arrowImage" id="i4" src="cut/arrowUp.png"></div>
-                </div>
-                <div id="d4" class="data">
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <div class="radioLabel">האם נדרשת לינה</div>
-                            <div class="radioArea2">
-                                <div class="radioRight">
-                                    כן
-                                </div>
-                                <div class="radioLeftSelected">
-                                    לא
-                                </div>
-                            </div>
-                        </div>
-                        <div class="smallField">
-                            <input  value="תאריך CHECKIN">
-                        </div>
-                        <div class="smallField">
-                            <input  value="תאריך CHECKOUT">
-                        </div>
-                        <div class="smallField">
-                            <div class="info">
-                            מספר לילות: 
-                            </div>
-                        </div>
-                    </div>
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <select >
-                                <option value="0">סוג חדר</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <div class="radioLabel">שותף לחדר</div>
-                            <div style="float:right;width:80%;height:32px;text-align:center">
-                                <div class="radioRightSelected">
-                                    כן
-                                </div>
-                                <div class="radioLeft">
-                                    לא
-                                </div>
-                            </div>
-                        </div>
-                        <div class="smallField">
-                            <div class="radioLabel">ארוחת בוקר</div>
-                            <div class="radioArea2">
-                                <div class="radioRightSelected">
-                                    כן
-                                </div>
-                                <div class="radioLeft">
-                                    לא
-                                </div>
-                            </div>
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">אופן התשלום</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="formArea">
-                <div class="title">
-                    <div class="text">תשלום</div>
-                    <div class="arrow"><img class="arrowImage" id="i5" src="cut/arrowUp.png"></div>
-                </div>
-                <div id="d5" class="data">
-                    <div class="oneSection">
-                        <div class="smallField">
-                            <select >
-                                <option value="0">סוג הרשמה</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <div class="info">
-                            מחיר: 
-                            </div>
-                        </div>
-                        <div class="smallField">
-                            <select >
-                                <option value="0">אמצעי תשלום</option>
-                            </select>
-                        </div>
-                        <div class="smallField">
-                            <div class="info">
-                            סטטוס: 
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="sendButton">שליחה</div>
+            <div class="sendButton" onclick="validateForm()">שליחה</div>
         </div>
         <div class="emptySpace"></div>
     </div>
@@ -355,5 +74,254 @@
             <div class="leftLogo"><img src="cut/selfLogoForms.png"></div>
         </div>
     </div>
+    <script>
+
+        var x;
+
+    function getParameterByName(name, url) {
+			if (!url) url = window.location.href;
+			name = name.replace(/[\[\]]/g, '\\$&');
+			var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+				results = regex.exec(url);
+			if (!results) return null;
+			if (!results[2]) return '';
+			return decodeURIComponent(results[2].replace(/\+/g, ' '));
+		}
+
+function getData() {
+    xx = getParameterByName("num");
+    var url = "server/getForm.asp?item="+xx+"";
+
+    $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "json",
+        success: function (data2) {
+            x = (typeof data2 === "string") ? JSON.parse(data2) : data2;
+            console.log(x);
+            if (!x || !x.theNumber) return;
+
+            document.getElementById("forumTitle").innerHTML = x.theName || "";
+            document.getElementById("when").innerHTML = (x.startdate || "") + (x.enddate && x.enddate != x.startdate ? " - " + x.enddate : "");
+            document.getElementById("where").innerHTML = x.location || "";
+            document.getElementById("toAgenda").href = "agenda.html?num=" + x.theNumber;
+            if (x.banner) document.getElementById("banner").src = "images/" + x.banner;
+            if (x.logo) document.getElementById("clientLogo").src = "images/" + x.logo;
+
+            buildForm(x);
+            setTimeout(changeColors, 1000);
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            console.error("Failed to fetch form:", thrownError);
+        }
+    });
+}
+
+function buildForm(x) {
+    var s = "";
+    var secNum = 0;
+
+    for (var i = 0; i < x.sections.length; i++) {
+        var sec = x.sections[i];
+        secNum++;
+
+        s += "<div class='formArea'>";
+        s += "  <div class='title'>";
+        s += "    <div class='text'>" + sec.theName + "</div>";
+        s += "    <div class='arrow'><img class='arrowImage' id='i" + secNum + "' src='cut/arrowUp.png'></div>";
+        s += "  </div>";
+        s += "  <div id='d" + secNum + "' class='data'>";
+
+        var row = "";
+        var inRow = 0;
+
+        for (var k = 0; k < sec.fields.length; k++) {
+            var f = sec.fields[k];
+
+            if (f.fieldType == "3") {
+                // בחירה מרובה תופסת שורה משל עצמה
+                if (inRow > 0) { s += "<div class='oneSection'>" + row + "</div>"; row = ""; inRow = 0; }
+                s += "<div class='oneSection'>" + buildMultiField(f) + "</div>";
+            } else {
+                row += buildSmallField(f);
+                inRow++;
+                if (inRow == 4) { s += "<div class='oneSection'>" + row + "</div>"; row = ""; inRow = 0; }
+            }
+        }
+        if (inRow > 0) s += "<div class='oneSection'>" + row + "</div>";
+
+        s += "  </div>";
+        s += "</div>";
+    }
+
+    document.getElementById("allData").innerHTML = s;
+}
+
+function fieldLabel(f) {
+    return f.theName + (f.isMandatory == "True" ? " *" : "");
+}
+
+function fieldAttrs(f) {
+    return "data-field='" + f.theNumber + "' data-type='" + f.fieldType +
+           "' data-valid='" + f.validation + "' data-mand='" + f.isMandatory + "'";
+}
+
+function sizeAttr(f) {
+    var n = parseInt(f.theSize, 10);
+    return (n > 0) ? " maxlength='" + n + "'" : "";
+}
+
+function buildSmallField(f) {
+    var lbl = fieldLabel(f);
+    var at = fieldAttrs(f);
+    var h = "<div class='smallField'>";
+
+    if (f.fieldType == "2") {
+        h += "<select " + at + "><option value='0'>" + lbl + "</option>";
+        for (var i = 0; i < f.options.length; i++)
+            h += "<option value='" + f.options[i].theNumber + "'>" + f.options[i].theName + "</option>";
+        h += "</select>";
+    } else if (f.fieldType == "4") {
+        h += "<div class='radioLabel'>" + lbl + "</div>";
+        h += "<div class='radioArea2' " + at + " data-value='False'>";
+        h += "  <div class='radioRight' onclick=\"pickYesNo(this)\">כן</div>";
+        h += "  <div class='radioLeftSelected' onclick=\"pickYesNo(this)\">לא</div>";
+        h += "</div>";
+    } else if (f.fieldType == "5") {
+        h += "<div class='radioLabel'>" + lbl + "</div>";
+        h += "<input type='date' " + at + ">";
+    } else if (f.fieldType == "6") {
+        h += "<input type='text' inputmode='numeric' placeholder='" + lbl + "' " + at + sizeAttr(f) + ">";
+    } else {
+        h += "<input type='text' placeholder='" + lbl + "' " + at + sizeAttr(f) + ">";
+    }
+
+    h += "<div class='fieldError'></div>";
+    h += "</div>";
+    return h;
+}
+
+function buildMultiField(f) {
+    var h = "<div class='bigField'>";
+    h += "<div class='radioLabel'>" + fieldLabel(f) + "</div>";
+    h += "<div class='checkList' " + fieldAttrs(f) + ">";
+    for (var i = 0; i < f.options.length; i++) {
+        h += "<div class='checkItem'><label><input type='checkbox' value='" +
+             f.options[i].theNumber + "'> " + f.options[i].theName + "</label></div>";
+    }
+    h += "</div>";
+    h += "<div class='fieldError'></div>";
+    h += "</div>";
+    return h;
+}
+
+function pickYesNo(el) {
+    var area = el.parentNode;
+    var isYes = (el === area.children[0]);
+    area.children[0].className = isYes ? "radioRightSelected" : "radioRight";
+    area.children[1].className = isYes ? "radioLeft" : "radioLeftSelected";
+    area.setAttribute("data-value", isYes ? "True" : "False");
+}
+
+function validateForm() {
+    var firstBad = null;
+
+    $(".fieldError").html("");
+    $(".errorField").removeClass("errorField");
+
+    $("[data-field]").each(function () {
+        var el = this;
+        var t = el.getAttribute("data-type");
+        var mand = (el.getAttribute("data-mand") == "True");
+        var v = parseInt(el.getAttribute("data-valid") || "0", 10);
+        var val = "";
+        var msg = "";
+
+        if (t == "3") {
+            val = $(el).find("input:checked").length > 0 ? "x" : "";
+        } else if (t == "4") {
+            val = "x";   // כן/לא תמיד מחזיק ערך
+        } else {
+            val = (el.value || "").replace(/^\s+|\s+$/g, "");
+            if (t == "2" && val == "0") val = "";
+        }
+
+        if (mand && val === "") {
+            msg = "שדה חובה";
+        } else if (val !== "" && t != "3" && t != "4") {
+            msg = checkValidation(v, val);
+        }
+
+        if (msg !== "") {
+            $(el).addClass("errorField");
+            $(el).closest(".smallField, .bigField").find(".fieldError").html(msg);
+            if (firstBad === null) firstBad = el;
+        }
+    });
+
+    if (firstBad !== null) {
+        firstBad.scrollIntoView({ behavior: "smooth", block: "center" });
+        return false;
+    }
+
+    // שמירת ההרשמה תמומש בשלב נפרד
+    return true;
+}
+
+function checkValidation(v, val) {
+    switch (v) {
+        case 2:
+            return /^\d+$/.test(val) ? "" : "ספרות בלבד";
+        case 3:
+            return validIsraeliId(val) ? "" : "תעודת זהות לא תקינה";
+        case 4:
+            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val) ? "" : "כתובת דואר אלקטרוני לא תקינה";
+        case 5:
+            return isNaN(Date.parse(val)) ? "תאריך לא תקין" : "";
+        case 6:
+            return /^0\d{1,2}-?\d{7}$/.test(val.replace(/[\s\-]/g, "").replace(/^(0\d{1,2})/, "$1")) ||
+                   /^0\d{8,9}$/.test(val.replace(/[\s\-]/g, "")) ? "" : "מספר טלפון לא תקין";
+        case 7:
+            return /^[A-Za-z0-9 '\.\-]+$/.test(val) ? "" : "אותיות באנגלית בלבד";
+        case 8:
+            return /^([01]\d|2[0-3]):[0-5]\d$/.test(val) ? "" : "שעה לא תקינה";
+        default:
+            return "";
+    }
+}
+
+function validIsraeliId(id) {
+    id = String(id).replace(/[\s\-]/g, "");
+    if (!/^\d{1,9}$/.test(id)) return false;
+    while (id.length < 9) id = "0" + id;
+    var sum = 0;
+    for (var i = 0; i < 9; i++) {
+        var d = Number(id.charAt(i)) * ((i % 2) + 1);
+        if (d > 9) d -= 9;
+        sum += d;
+    }
+    return (sum % 10) === 0;
+}
+
+function changeColors() {
+    if (!x) return;
+
+    document.body.style.backgroundColor = x.bkcolor;
+    document.body.style.color = x.textcolor;
+
+    var forumEl = document.querySelector(".forumDetails");
+    if (forumEl) forumEl.style.color = x.textColor2;
+
+    var buttonEl = document.querySelector(".sendButton");
+    if (buttonEl) buttonEl.style.backgroundColor = x.bkButton;
+
+    if (x.roundedCorners == "True") {
+        document.querySelectorAll(".formArea .title").forEach(function (el) {
+            el.style.borderTopRightRadius = "10px";
+            el.style.borderTopLeftRadius = "10px";
+        });
+    }
+}
+    </script>
 </body>
 </html>
