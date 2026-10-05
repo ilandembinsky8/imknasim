@@ -80,7 +80,7 @@ body{
     font-family:Assistant-Regular;
     direction:rtl;
     background-color:rgba(22, 56, 111, 1);
-    color:rgba(255,255,255,1)
+    color:rgba(255,255,255,1);
 }
 
 
@@ -622,4 +622,57 @@ select, input{
 
 .footer2 .leftLogo{
     float:left
+}
+
+@media only screen and (max-width: 1600px) {
+  .itemHour{
+        width:20%;
+    }
+
+    .itemData{
+        width:75%;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+  .itemHour{
+        width:60%;
+    }
+
+    .itemData{
+        width:100%;
+    }
+
+    .formArea .data .oneSection .smallField{
+        width:100%;
+        margin-left:0%
+    }
+
+    .formArea .data .oneSection .smallField:last-child{
+        margin-left:0px;
+    }
+
+    .formArea .data .oneSection .bigField{
+        width:100%;
+        margin-left:0%
+    }
+}
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .onlyScreen{
+        display:none;
+    }
+
+    .itemHour{
+        width:20%;
+    }
+
+    .itemData{
+        width:75%;
+    }
 }

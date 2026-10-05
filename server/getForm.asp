@@ -43,6 +43,9 @@ function n(v)
 	end if
 end function
 
+response.write err.number
+response.end
+
 theConf = trim(request("item"))
 if theConf&"a" = "a" then theConf = "0"
 if not isnumeric(theConf) then theConf = "0"
