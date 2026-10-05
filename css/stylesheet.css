@@ -633,58 +633,6 @@ select, input{
     float:left
 }
 
-@media only screen and (max-width: 1600px) {
-  .itemHour{
-        width:20%;
-    }
-
-    .itemData{
-        width:75%;
-    }
-}
-
-@media only screen and (max-width: 768px) {
-  .itemHour{
-        width:60%;
-    }
-
-    .itemData{
-        width:100%;
-    }
-
-    .formArea .data .oneSection .smallField{
-        width:100%;
-        margin-left:0%
-    }
-
-    .formArea .data .oneSection .smallField:last-child{
-        margin-left:0px;
-    }
-
-    .formArea .data .oneSection .bigField{
-        width:100%;
-        margin-left:0%
-    }
-}
-
-@media print {
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    .onlyScreen{
-        display:none;
-    }
-
-    .itemHour{
-        width:20%;
-    }
-
-    .itemData{
-        width:75%;
-    }
-}
 .editPanel{
     float:right;
     width:100%;
@@ -744,4 +692,67 @@ select, input{
     font-size:0.95rem;
     color:rgba(211, 47, 47, 1);
     margin-top:2px
+}
+
+@media only screen and (max-width: 1600px) {
+  .itemHour{
+        width:20%;
+    }
+
+    .itemData{
+        width:75%;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+  .itemHour{
+        width:60%;
+    }
+
+    .itemData{
+        width:100%;
+    }
+
+    .formArea .data .oneSection .smallField{
+        width:100%;
+        margin-left:0%
+    }
+
+    .formArea .data .oneSection .smallField:last-child{
+        margin-left:0px;
+    }
+
+    .formArea .data .oneSection .bigField{
+        width:100%;
+        margin-left:0%
+    }
+
+    .editPanel .editBody .editField{
+        width:100%;
+        margin-left:0%;
+        margin-bottom:16px
+    }
+
+    .editPanel .editBody .editButton{
+        width:100%
+    }
+}
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .onlyScreen{
+        display:none;
+    }
+
+    .itemHour{
+        width:20%;
+    }
+
+    .itemData{
+        width:75%;
+    }
 }
