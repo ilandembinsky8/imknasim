@@ -36,6 +36,15 @@
     </div>
     <div class="section1">
         <div class="inner1">
+            <div class="editPanel">
+                <div class="editToggle" onclick="toggleEdit()">עריכה לאחר הרשמה</div>
+                <div id="editBody" class="editBody" style="display:none">
+                    <div id="editMsg" class="editMsg"></div>
+                    <div class="editField"><input type="text" id="editCell" placeholder="טלפון נייד"></div>
+                    <div class="editField"><input type="text" id="editCode" placeholder="קוד בן 4 ספרות" maxlength="4"></div>
+                    <div class="editButton" onclick="loadRegistration()">טעינת הפרטים</div>
+                </div>
+            </div>
             <div id="forumTitle" class="forumTitle">
                 &nbsp;
             </div>
@@ -79,6 +88,14 @@
 
         var x;
 
+    // set once the registrant has signed in with mobile + code, so the next
+    // submit updates that registration instead of creating a new one
+    var editReg = "";
+    var editCode = "";
+
+    // the mobile field is the identity key. field 9 (landline) is never used
+    var CELL_FIELD = "11";
+
     function getParameterByName(name, url) {
 			if (!url) url = window.location.href;
 			name = name.replace(/[\[\]]/g, '\\$&');
@@ -110,6 +127,7 @@ function getData() {
             if (x.logo) document.getElementById("clientLogo").src = "images/" + x.logo;
 
             buildForm(x);
+            if (getParameterByName("edit") === "1") openEdit();
             setTimeout(changeColors, 1000);
         },
         error: function (xhr, ajaxOptions, thrownError) {
@@ -156,6 +174,120 @@ function buildForm(x) {
     }
 
     document.getElementById("allData").innerHTML = s;
+
+    // warn about a duplicate as soon as the registrant leaves the mobile field
+    var cell = document.querySelector("[data-field='" + CELL_FIELD + "']");
+    if (cell) cell.onblur = function () { checkDuplicate(this); };
+}
+
+// ask the server whether this mobile is already registered for this conference
+function checkDuplicate(el) {
+    if (editReg !== "") return;                    // already editing that registration
+    var val = (el.value || "").replace(/^\s+|\s+$/g, "");
+    clearDupMsg();
+    if (val === "") return;
+
+    $.ajax({
+        url: "server/checkCell.asp",
+        type: "GET",
+        data: { item: x.theNumber, cell: val },
+        dataType: "json",
+        success: function (res) {
+            var o = (typeof res === "string") ? JSON.parse(res) : res;
+            if (o && o.exists === "True") {
+                var box = el.closest(".smallField, .bigField");
+                if (box) {
+                    var m = document.createElement("div");
+                    m.className = "dupMsg";
+                    m.innerHTML = "המספר הזה כבר רשום לכנס. אפשר להזין אותו יחד עם הקוד שקיבלתם כדי לערוך את הפרטים.";
+                    box.appendChild(m);
+                }
+                document.getElementById("editCell").value = val;
+                openEdit();
+            }
+        }
+    });
+}
+
+function clearDupMsg() {
+    $(".dupMsg").remove();
+}
+
+function openEdit() {
+    document.getElementById("editBody").style.display = "block";
+}
+
+function toggleEdit() {
+    var el = document.getElementById("editBody");
+    el.style.display = (el.style.display === "block") ? "none" : "block";
+}
+
+// sign in to an existing registration and prefill the form with its answers
+function loadRegistration() {
+    var cell = (document.getElementById("editCell").value || "").replace(/^\s+|\s+$/g, "");
+    var code = (document.getElementById("editCode").value || "").replace(/^\s+|\s+$/g, "");
+    var msg = document.getElementById("editMsg");
+    msg.innerHTML = "";
+
+    if (cell === "" || code === "") {
+        msg.innerHTML = "יש להזין טלפון נייד וקוד.";
+        return;
+    }
+
+    $.ajax({
+        url: "server/getReg.asp",
+        type: "GET",
+        data: { item: x.theNumber, cell: cell, code: code },
+        dataType: "json",
+        success: function (res) {
+            var o = (typeof res === "string") ? JSON.parse(res) : res;
+            if (o && o.ok === "True") {
+                editReg = o.theNumber;
+                editCode = code;
+                prefill(o.values);
+                clearDupMsg();
+                document.getElementById("editBody").style.display = "none";
+                document.querySelector(".editToggle").innerHTML =
+                    "עריכת הרשמה מספר " + o.theNumber;
+                document.querySelector(".sendButton").innerHTML = "עדכון";
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            } else if (o && o.error === "locked") {
+                msg.innerHTML = "בוצעו יותר מדי ניסיונות. אפשר לנסות שוב אחרי " + o.until + ".";
+            } else {
+                msg.innerHTML = "הטלפון או הקוד אינם נכונים.";
+            }
+        },
+        error: function () {
+            msg.innerHTML = "אירעה תקלה. אנא נסו שוב.";
+        }
+    });
+}
+
+function prefill(values) {
+    if (!values) return;
+    for (var i = 0; i < values.length; i++) {
+        setFieldValue(values[i].theField, values[i].theValue);
+    }
+}
+
+function setFieldValue(id, val) {
+    var el = document.querySelector("[data-field='" + id + "']");
+    if (!el) return;
+    var t = el.getAttribute("data-type");
+
+    if (t == "3") {
+        var picked = String(val).split(",");
+        $(el).find("input[type=checkbox]").each(function () {
+            this.checked = (picked.indexOf(this.value) >= 0);
+        });
+    } else if (t == "4") {
+        var isYes = (val === "True");
+        el.children[0].className = isYes ? "radioRightSelected" : "radioRight";
+        el.children[1].className = isYes ? "radioLeft" : "radioLeftSelected";
+        el.setAttribute("data-value", isYes ? "True" : "False");
+    } else {
+        el.value = val;
+    }
 }
 
 function fieldLabel(f) {
@@ -272,6 +404,10 @@ function validateForm() {
 // collect every control into f<fieldId> pairs and post them to the server
 function submitForm() {
     var data = { item: x.theNumber };
+    if (editReg !== "") {
+        data.reg = editReg;
+        data.code = editCode;
+    }
 
     $("[data-field]").each(function () {
         var el = this;
@@ -300,10 +436,18 @@ function submitForm() {
         success: function (res) {
             var o = (typeof res === "string") ? JSON.parse(res) : res;
             if (o && o.ok === "True") {
-                showThanks(o.theNumber);
+                showThanks(o);
             } else {
                 setSending(false);
-                document.getElementById("sendError").innerHTML = "השליחה נכשלה. אנא נסו שוב.";
+                if (o && o.error === "duplicate") {
+                    document.getElementById("sendError").innerHTML =
+                        "מספר הטלפון כבר רשום לכנס. אפשר לערוך את ההרשמה הקיימת עם הקוד שקיבלתם.";
+                    openEdit();
+                } else if (o && o.error === "badcode") {
+                    document.getElementById("sendError").innerHTML = "הקוד אינו נכון. יש להתחבר מחדש כדי לערוך.";
+                } else {
+                    document.getElementById("sendError").innerHTML = "השליחה נכשלה. אנא נסו שוב.";
+                }
                 console.error("save failed:", o);
             }
         },
@@ -324,17 +468,42 @@ function setSending(on) {
     btn.innerHTML = on ? "שולח..." : "שליחה";
 }
 
-function showThanks(num) {
+function showThanks(o) {
+    var dark = "color:rgba(79,79,79,1)";
     var s = "";
     s += "<div class='forumTitle'>" + (x.theName || "") + "</div>";
     s += "<div class='formArea'>";
     s += "  <div class='data' style='text-align:center'>";
-    s += "    <div style='font-size:1.8rem;color:rgba(79,79,79,1);margin-bottom:12px'>ההרשמה נקלטה בהצלחה</div>";
-    s += "    <div style='font-size:1.3rem;color:rgba(79,79,79,1)'>מספר הרשמה: " + num + "</div>";
+
+    if (o.mode === "edit") {
+        s += "<div style='font-size:1.8rem;" + dark + ";margin-bottom:12px'>הפרטים עודכנו בהצלחה</div>";
+        s += "<div style='font-size:1.3rem;" + dark + "'>מספר הרשמה: " + o.theNumber + "</div>";
+    } else {
+        s += "<div style='font-size:1.8rem;" + dark + ";margin-bottom:12px'>ההרשמה נקלטה בהצלחה</div>";
+        s += "<div style='font-size:1.3rem;" + dark + ";margin-bottom:18px'>מספר הרשמה: " + o.theNumber + "</div>";
+        s += "<div style='font-size:2.2rem;font-family:Assistant-Bold;" + dark + "'>" + o.theCode + "</div>";
+        s += "<div style='font-size:1.1rem;" + dark + ";margin-top:8px'>";
+        s += "זהו הקוד שלכם. שמרו אותו — הוא נדרש יחד עם מספר הטלפון הנייד כדי לערוך את הפרטים בהמשך.";
+        s += "</div>";
+    }
+
     s += "  </div>";
     s += "</div>";
+
+    // the form itself is gone from the page now, so the link reloads it and
+    // reopens the panel instead of trying to prefill controls that do not exist
+    s += "<div class='editPanel'>";
+    s += "  <div class='editToggle' onclick=\"reopenForEdit()\">עריכה לאחר הרשמה</div>";
+    s += "</div>";
+
     document.querySelector(".inner1").innerHTML = s;
     window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function reopenForEdit() {
+    // a real query change, so the browser performs a full navigation and the
+    // form is rebuilt. a hash alone would not reload the page
+    location.href = "forms.html?num=" + x.theNumber + "&edit=1";
 }
 
 function checkValidation(v, val) {
@@ -348,8 +517,10 @@ function checkValidation(v, val) {
         case 5:
             return isNaN(Date.parse(val)) ? "תאריך לא תקין" : "";
         case 6:
-            return /^0\d{1,2}-?\d{7}$/.test(val.replace(/[\s\-]/g, "").replace(/^(0\d{1,2})/, "$1")) ||
-                   /^0\d{8,9}$/.test(val.replace(/[\s\-]/g, "")) ? "" : "מספר טלפון לא תקין";
+            // an optional + or 00 prefix, then 7 to 15 digits. deliberately not
+            // Israeli-only - registrants from other countries are expected
+            return /^\d{7,15}$/.test(val.replace(/^(\+|00)/, "").replace(/[\s\-()]/g, ""))
+                   ? "" : "מספר טלפון לא תקין";
         case 7:
             return /^[A-Za-z0-9 '\.\-]+$/.test(val) ? "" : "אותיות באנגלית בלבד";
         case 8:

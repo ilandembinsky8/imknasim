@@ -1,53 +1,28 @@
 ﻿
 <!-- #include file="secure.inc" -->
+<!-- #include file="lib.inc" -->
 <%
+' saves a registration, or updates an existing one when reg + code are posted.
+' values go through the recordset, never into SQL text.
 set r=Server.CreateObject("ADODB.Recordset")
 set r1=Server.CreateObject("ADODB.Recordset")
 set r2=Server.CreateObject("ADODB.Recordset")
 set r3=Server.CreateObject("ADODB.Recordset")
 set r4=Server.CreateObject("ADODB.Recordset")
 
+' the mobile field is the identity key. field 9 (landline) is never used for
+' identity - it is often a shared institutional number
+const CELL_FIELD  = 11
+const EMAIL_FIELD = 8
+const FIRST_FIELD = 1
+const LAST_FIELD  = 2
+
 dim fId(300)
 dim fType(300)
 dim fMand(300)
 dim fChoice(300)
-
-' escape text for JSON
-function j(v)
-	dim sj
-	if isnull(v) then
-		sj = ""
-	else
-		sj = trim(cstr(v))
-	end if
-	sj = replace(sj, "\", "\\")
-	sj = replace(sj, """", "\""")
-	sj = replace(sj, vbCrLf, " ")
-	sj = replace(sj, vbCr, " ")
-	sj = replace(sj, vbLf, " ")
-	sj = replace(sj, vbTab, " ")
-	j = sj
-end function
-
-' bit to True/False, same convention as the rest of the project
-function b(v)
-	if isnull(v) then
-		b = "False"
-	elseif v = true then
-		b = "True"
-	else
-		b = "False"
-	end if
-end function
-
-' number, empty becomes 0
-function n(v)
-	if isnull(v) then
-		n = "0"
-	else
-		n = trim(cstr(v))
-	end if
-end function
+dim vals(50)
+dim labels(50)
 
 ' posted value of one field, always a trimmed string
 function posted(fieldId)
@@ -73,21 +48,49 @@ function choiceText(choiceTableId, theValue)
 	r4.close
 end function
 
-' one regfield row. values go through the recordset, never into SQL text
-sub saveValue(regId, fieldId, theValue, theLabel)
-	r2.open "regfield",strconn,1,3
-	r2.addnew
-	r2("thereg") = clng(regId)
-	r2("thefield") = clng(fieldId)
-	r2("thevalue") = left(theValue, 255)
-	if theLabel <> "" then r2("thetext") = left(theLabel, 255)
-	r2.update
+' write the answers of one field in place: reuse existing rows, add what is
+' missing, delete only the surplus. a failure here can never empty the whole
+' registration the way a delete-then-reinsert would
+sub writeField(regId, fieldId, cntVals)
+	dim sqlw, i
+	sqlw = "select * from [imknasim].[dbo].[regfield] "
+	sqlw = sqlw & "where thereg=" & regId & " and thefield=" & fieldId & " order by theindex"
+	r2.open sqlw,strconn,1,3
+	i = 0
+	while not r2.eof
+		if i < cntVals then
+			r2("thevalue") = left(vals(i), 255)
+			if labels(i) <> "" then
+				r2("thetext") = left(labels(i), 255)
+			else
+				r2("thetext") = null
+			end if
+			r2.update
+			i = i + 1
+		else
+			r2.delete
+		end if
+		r2.movenext
+	wend
+	while i < cntVals
+		r2.addnew
+		r2("thereg") = clng(regId)
+		r2("thefield") = clng(fieldId)
+		r2("thevalue") = left(vals(i), 255)
+		if labels(i) <> "" then r2("thetext") = left(labels(i), 255)
+		r2.update
+		i = i + 1
+	wend
 	r2.close
 end sub
 
 theConf = trim(request.form("item") & "")
 if theConf & "a" = "a" then theConf = "0"
 if not isnumeric(theConf) then theConf = "0"
+
+theReg = trim(request.form("reg") & "")
+if not isnumeric(theReg) then theReg = ""
+theCode = trim(request.form("code") & "")
 
 sql = "select theIndex from [imknasim].[dbo].[conference] where theIndex=" & theConf
 r.open sql,strconn,1,3
@@ -124,60 +127,120 @@ else
 		end if
 	next
 
+	theCell = normCell(posted(CELL_FIELD))
+
 	if missing <> "" then
 		missing = left(missing, len(missing) - 1)
 		response.write "{""ok"":""False"",""error"":""missing"",""fields"":""" & missing & """}"
+	elseif theCell = "" then
+		response.write "{""ok"":""False"",""error"":""missing"",""fields"":""" & CELL_FIELD & """}"
 	else
-		' registration.thename / cellnum / theemail come from fixed superset field ids:
-		' 1 first name, 2 last name, 8 email, 11 mobile, 9 phone as a fallback
-		theFull = trim(posted(1) & " " & posted(2))
-		theMail = posted(8)
-		thePhone = posted(11)
-		if thePhone = "" then thePhone = posted(9)
-
-		r.open "registration",strconn,1,3
-		r.addnew
-		r("theconf") = clng(theConf)
-		r("thename") = left(theFull, 255)
-		r("cellnum") = left(thePhone, 50)
-		r("theemail") = left(theMail, 50)
-		r("thedate") = year(date) & "-" & right("0" & month(date), 2) & "-" & right("0" & day(date), 2)
-		r("thetime") = right("0" & hour(time), 2) & ":" & right("0" & minute(time), 2)
-		r.update
-		theReg = n(r("theindex"))
-		r.close
-
-		' fallback in case the provider does not hand back the identity on update
-		if theReg = "0" then
-			sql = "select max(theindex) as newid from [imknasim].[dbo].[registration] where theconf=" & theConf
+		' editing requires the code of that registration, otherwise anyone could
+		' post a registration number and overwrite someone else's answers
+		authOk = true
+		isEdit = false
+		if theReg <> "" then
+			isEdit = true
+			sql = "select * from [imknasim].[dbo].[registration] "
+			sql = sql & "where theindex=" & theReg & " and theconf=" & theConf
 			r.open sql,strconn,1,3
-			if not r.eof then theReg = n(r("newid"))
+			if r.eof then
+				authOk = false
+			elseif trim(r("thecode") & "") = "" or trim(r("thecode") & "") <> theCode then
+				authOk = false
+			end if
 			r.close
 		end if
 
-		for i = 0 to cnt - 1
-			theVal = posted(fId(i))
-			if theVal <> "" then
-				if fType(i) = "3" then
-					' multi choice arrives comma separated, one row per selection
-					parts = split(theVal, ",")
-					for k = 0 to ubound(parts)
-						onePart = trim(parts(k))
-						if onePart <> "" then
-							call saveValue(theReg, fId(i), onePart, choiceText(fChoice(i), onePart))
-						end if
-					next
-				elseif fType(i) = "2" then
-					if theVal <> "0" then
-						call saveValue(theReg, fId(i), theVal, choiceText(fChoice(i), theVal))
-					end if
-				else
-					call saveValue(theReg, fId(i), theVal, "")
-				end if
-			end if
-		next
+		if authOk = false then
+			response.write "{""ok"":""False"",""error"":""badcode""}"
+		else
+			' the mobile must not already belong to another registration of this conference
+			sql = "select theindex from [imknasim].[dbo].[registration] "
+			sql = sql & "where theconf=" & theConf & " and cellnum='" & replace(theCell, "'", "''") & "'"
+			if isEdit = true then sql = sql & " and theindex<>" & theReg
+			r.open sql,strconn,1,3
+			taken = not r.eof
+			r.close
 
-		response.write "{""ok"":""True"",""theNumber"":""" & theReg & """}"
+			if taken = true then
+				response.write "{""ok"":""False"",""error"":""duplicate""}"
+			else
+				theFull = trim(posted(FIRST_FIELD) & " " & posted(LAST_FIELD))
+				theMail = posted(EMAIL_FIELD)
+
+				if isEdit = true then
+					sql = "select * from [imknasim].[dbo].[registration] where theindex=" & theReg
+					r.open sql,strconn,1,3
+					r("thename") = left(theFull, 255)
+					r("cellnum") = left(theCell, 50)
+					r("theemail") = left(theMail, 50)
+					r.update
+					outCode = trim(r("thecode") & "")
+					r.close
+				else
+					outCode = newCode()
+					r.open "registration",strconn,1,3
+					r.addnew
+					r("theconf") = clng(theConf)
+					r("thename") = left(theFull, 255)
+					r("cellnum") = left(theCell, 50)
+					r("theemail") = left(theMail, 50)
+					r("thedate") = left(stampNow(), 10)
+					r("thetime") = right(stampNow(), 5)
+					r("thecode") = outCode
+					r("thetries") = 0
+					r.update
+					theReg = n(r("theindex"))
+					r.close
+
+					if theReg = "0" then
+						sql = "select max(theindex) as newid from [imknasim].[dbo].[registration] where theconf=" & theConf
+						r.open sql,strconn,1,3
+						if not r.eof then theReg = n(r("newid"))
+						r.close
+					end if
+				end if
+
+				for i = 0 to cnt - 1
+					theVal = posted(fId(i))
+					cntVals = 0
+					if theVal <> "" then
+						if fType(i) = "3" then
+							' multi choice arrives comma separated, one row per selection
+							parts = split(theVal, ",")
+							for k = 0 to ubound(parts)
+								onePart = trim(parts(k))
+								if onePart <> "" then
+									vals(cntVals) = onePart
+									labels(cntVals) = choiceText(fChoice(i), onePart)
+									cntVals = cntVals + 1
+								end if
+							next
+						elseif fType(i) = "2" then
+							if theVal <> "0" then
+								vals(0) = theVal
+								labels(0) = choiceText(fChoice(i), theVal)
+								cntVals = 1
+							end if
+						else
+							vals(0) = theVal
+							labels(0) = ""
+							cntVals = 1
+						end if
+					end if
+					call writeField(theReg, fId(i), cntVals)
+				next
+
+				s = "{""ok"":""True"",""theNumber"":""" & theReg & ""","
+				if isEdit = true then
+					s = s & """mode"":""edit""}"
+				else
+					s = s & """mode"":""new"",""theCode"":""" & outCode & """}"
+				end if
+				response.write s
+			end if
+		end if
 	end if
 end if
 %>

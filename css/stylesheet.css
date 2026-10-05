@@ -685,3 +685,63 @@ select, input{
         width:75%;
     }
 }
+.editPanel{
+    float:right;
+    width:100%;
+    margin-bottom:20px
+}
+
+.editPanel .editToggle{
+    float:right;
+    width:100%;
+    font-size:1.66rem;
+    font-family:Assistant-SemiBold;
+    text-decoration:underline;
+    cursor:pointer
+}
+
+.editPanel .editBody{
+    float:right;
+    width:100%;
+    box-sizing:border-box;
+    background-color:rgba(255, 255, 255, 1);
+    border-radius:10px;
+    padding:20px;
+    margin-top:10px
+}
+
+.editPanel .editBody .editField{
+    float:right;
+    width:30%;
+    margin-left:3%
+}
+
+.editPanel .editBody .editButton{
+    float:right;
+    width:160px;
+    height:34px;
+    border-radius:17px;
+    background-color:rgba(235, 242, 251, 1);
+    color:rgba(22, 56, 111, 1);
+    font-family:Assistant-SemiBold;
+    font-size:1.1rem;
+    text-align:center;
+    padding-top:4px;
+    cursor:pointer
+}
+
+.editPanel .editBody .editMsg{
+    float:right;
+    width:100%;
+    font-size:1rem;
+    color:rgba(211, 47, 47, 1);
+    margin-bottom:10px
+}
+
+.dupMsg{
+    float:right;
+    width:100%;
+    font-size:0.95rem;
+    color:rgba(211, 47, 47, 1);
+    margin-top:2px
+}
