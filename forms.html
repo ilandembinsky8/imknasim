@@ -128,7 +128,7 @@ function getData() {
 
             buildForm(x);
             applyEditAvailability();
-            if (x.isEdit === "True" && getParameterByName("edit") === "1") openEdit();
+            if (x.editOpen === "True" && getParameterByName("edit") === "1") openEdit();
             setTimeout(changeColors, 1000);
         },
         error: function (xhr, ajaxOptions, thrownError) {
@@ -200,12 +200,12 @@ function checkDuplicate(el) {
                 if (box) {
                     var m = document.createElement("div");
                     m.className = "dupMsg";
-                    m.innerHTML = (x.isEdit === "True")
+                    m.innerHTML = (x.editOpen === "True")
                         ? "המספר הזה כבר רשום לכנס. אפשר להזין אותו יחד עם הקוד שקיבלתם כדי לערוך את הפרטים."
                         : "המספר הזה כבר רשום לכנס.";
                     box.appendChild(m);
                 }
-                if (x.isEdit === "True") {
+                if (x.editOpen === "True") {
                     document.getElementById("editCell").value = val;
                     openEdit();
                 }
@@ -218,10 +218,11 @@ function clearDupMsg() {
     $(".dupMsg").remove();
 }
 
-// conference.isedit decides whether editing after registration is offered at all
+// editOpen folds both conditions together: the conference allows editing
+// (conference.isedit) and the deadline (conference.whentoclose) has not passed
 function applyEditAvailability() {
     var panel = document.querySelector(".editPanel");
-    if (panel) panel.style.display = (x.isEdit === "True") ? "block" : "none";
+    if (panel) panel.style.display = (x.editOpen === "True") ? "block" : "none";
 }
 
 function openEdit() {
@@ -510,7 +511,7 @@ function showThanks(o) {
 
     // the form itself is gone from the page now, so the link reloads it and
     // reopens the panel instead of trying to prefill controls that do not exist
-    if (x.isEdit === "True") {
+    if (x.editOpen === "True") {
         s += "<div class='editPanel'>";
         s += "  <div class='editToggle' onclick=\"reopenForEdit()\">עריכה לאחר הרשמה</div>";
         s += "</div>";
