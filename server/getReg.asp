@@ -14,8 +14,19 @@ if not isnumeric(theConf) then theConf = "0"
 theCell = normCell(request("cell"))
 theCode = trim(request("code") & "")
 
+' editing is only offered while the conference allows it and the window is open
+editOpen = false
+if theConf <> "0" then
+	sql = "select * from [imknasim].[dbo].[conference] where theIndex=" & theConf
+	r.open sql,strconn,1,3
+	if not r.eof then editOpen = editIsOpen(r("isedit"), trim(r("startdate") & ""), n(r("whentoclose")))
+	r.close
+end if
+
 if theConf = "0" or theCell = "" or theCode = "" then
 	response.write "{""ok"":""False"",""error"":""input""}"
+elseif editOpen = false then
+	response.write "{""ok"":""False"",""error"":""closed""}"
 else
 	sql = "select * from [imknasim].[dbo].[registration] "
 	sql = sql & "where theconf=" & theConf & " and cellnum='" & replace(theCell, "'", "''") & "'"

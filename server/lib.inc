@@ -99,4 +99,60 @@ function newCode()
 	randomize
 	newCode = right("000" & cstr(int(rnd * 10000)), 4)
 end function
+
+' parse a YYYY-MM-DD string from the database into a real date.
+' cdate() depends on the server locale, DateSerial does not
+function parseDbDate(v)
+	dim t
+	t = trim(cstr(v & ""))
+	if len(t) < 10 then
+		parseDbDate = empty
+		exit function
+	end if
+	if not (isnumeric(left(t,4)) and isnumeric(mid(t,6,2)) and isnumeric(mid(t,9,2))) then
+		parseDbDate = empty
+		exit function
+	end if
+	parseDbDate = DateSerial(clng(left(t,4)), clng(mid(t,6,2)), clng(mid(t,9,2)))
+end function
+
+' a date back into the YYYY-MM-DD form the database stores
+function dbDate(d)
+	dbDate = year(d) & "-" & right("0" & month(d), 2) & "-" & right("0" & day(d), 2)
+end function
+
+' dd/mm/yyyy, for display
+function showDate(d)
+	showDate = right("0" & day(d), 2) & "/" & right("0" & month(d), 2) & "/" & year(d)
+end function
+
+' a conference day as the registrant sees it, for example: יום ד׳, 14/10/2026
+function dayLabel(d)
+	dim names
+	names = Array("א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "שבת")
+	dayLabel = "יום " & names(weekday(d) - 1) & ", " & showDate(d)
+end function
+
+' last date on which a registration may still be edited:
+' the conference start date minus conference.whentoclose days
+function editDeadline(startdateText, whenToClose)
+	dim d
+	d = parseDbDate(startdateText)
+	if isempty(d) then
+		editDeadline = empty
+		exit function
+	end if
+	editDeadline = dateadd("d", -1 * clng(n(whenToClose)), d)
+end function
+
+' the single place that decides whether editing is allowed right now, so that
+' getForm, getReg and saveForm can never disagree
+function editIsOpen(isEditFlag, startdateText, whenToClose)
+	dim d
+	editIsOpen = false
+	if b(isEditFlag) <> "True" then exit function
+	d = editDeadline(startdateText, whenToClose)
+	if isempty(d) then exit function
+	if date() <= d then editIsOpen = true
+end function
 %>

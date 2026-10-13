@@ -127,7 +127,8 @@ function getData() {
             if (x.logo) document.getElementById("clientLogo").src = "images/" + x.logo;
 
             buildForm(x);
-            if (getParameterByName("edit") === "1") openEdit();
+            applyEditAvailability();
+            if (x.isEdit === "True" && getParameterByName("edit") === "1") openEdit();
             setTimeout(changeColors, 1000);
         },
         error: function (xhr, ajaxOptions, thrownError) {
@@ -157,7 +158,7 @@ function buildForm(x) {
         for (var k = 0; k < sec.fields.length; k++) {
             var f = sec.fields[k];
 
-            if (f.fieldType == "3") {
+            if (f.fieldType == "3" || f.fieldType == "8") {
                 // a multi choice field takes a row of its own
                 if (inRow > 0) { s += "<div class='oneSection'>" + row + "</div>"; row = ""; inRow = 0; }
                 s += "<div class='oneSection'>" + buildMultiField(f) + "</div>";
@@ -199,11 +200,15 @@ function checkDuplicate(el) {
                 if (box) {
                     var m = document.createElement("div");
                     m.className = "dupMsg";
-                    m.innerHTML = "המספר הזה כבר רשום לכנס. אפשר להזין אותו יחד עם הקוד שקיבלתם כדי לערוך את הפרטים.";
+                    m.innerHTML = (x.isEdit === "True")
+                        ? "המספר הזה כבר רשום לכנס. אפשר להזין אותו יחד עם הקוד שקיבלתם כדי לערוך את הפרטים."
+                        : "המספר הזה כבר רשום לכנס.";
                     box.appendChild(m);
                 }
-                document.getElementById("editCell").value = val;
-                openEdit();
+                if (x.isEdit === "True") {
+                    document.getElementById("editCell").value = val;
+                    openEdit();
+                }
             }
         }
     });
@@ -211,6 +216,12 @@ function checkDuplicate(el) {
 
 function clearDupMsg() {
     $(".dupMsg").remove();
+}
+
+// conference.isedit decides whether editing after registration is offered at all
+function applyEditAvailability() {
+    var panel = document.querySelector(".editPanel");
+    if (panel) panel.style.display = (x.isEdit === "True") ? "block" : "none";
 }
 
 function openEdit() {
@@ -251,6 +262,8 @@ function loadRegistration() {
                     "עריכת הרשמה מספר " + o.theNumber;
                 document.querySelector(".sendButton").innerHTML = "עדכון";
                 window.scrollTo({ top: 0, behavior: "smooth" });
+            } else if (o && o.error === "closed") {
+                msg.innerHTML = "לא ניתן עוד לערוך את הפרטים לכנס זה.";
             } else if (o && o.error === "locked") {
                 msg.innerHTML = "בוצעו יותר מדי ניסיונות. אפשר לנסות שוב אחרי " + o.until + ".";
             } else {
@@ -275,7 +288,7 @@ function setFieldValue(id, val) {
     if (!el) return;
     var t = el.getAttribute("data-type");
 
-    if (t == "3") {
+    if (t == "3" || t == "8") {
         var picked = String(val).split(",");
         $(el).find("input[type=checkbox]").each(function () {
             this.checked = (picked.indexOf(this.value) >= 0);
@@ -309,7 +322,7 @@ function buildSmallField(f) {
     var at = fieldAttrs(f);
     var h = "<div class='smallField'>";
 
-    if (f.fieldType == "2") {
+    if (f.fieldType == "2" || f.fieldType == "7") {
         h += "<select " + at + "><option value='0'>" + lbl + "</option>";
         for (var i = 0; i < f.options.length; i++)
             h += "<option value='" + f.options[i].theNumber + "'>" + f.options[i].theName + "</option>";
@@ -370,18 +383,18 @@ function validateForm() {
         var val = "";
         var msg = "";
 
-        if (t == "3") {
+        if (t == "3" || t == "8") {
             val = $(el).find("input:checked").length > 0 ? "x" : "";
         } else if (t == "4") {
             val = "x";   // a yes/no control always holds a value
         } else {
             val = (el.value || "").replace(/^\s+|\s+$/g, "");
-            if (t == "2" && val == "0") val = "";
+            if ((t == "2" || t == "7") && val == "0") val = "";
         }
 
         if (mand && val === "") {
             msg = "שדה חובה";
-        } else if (val !== "" && t != "3" && t != "4") {
+        } else if (val !== "" && t != "3" && t != "8" && t != "4") {
             msg = checkValidation(v, val);
         }
 
@@ -414,7 +427,7 @@ function submitForm() {
         var id = el.getAttribute("data-field");
         var t = el.getAttribute("data-type");
 
-        if (t == "3") {
+        if (t == "3" || t == "8") {
             var picked = [];
             $(el).find("input:checked").each(function () { picked.push(this.value); });
             data["f" + id] = picked.join(",");
@@ -443,6 +456,8 @@ function submitForm() {
                     document.getElementById("sendError").innerHTML =
                         "מספר הטלפון כבר רשום לכנס. אפשר לערוך את ההרשמה הקיימת עם הקוד שקיבלתם.";
                     openEdit();
+                } else if (o && o.error === "closed") {
+                    document.getElementById("sendError").innerHTML = "לא ניתן עוד לערוך את הפרטים לכנס זה.";
                 } else if (o && o.error === "badcode") {
                     document.getElementById("sendError").innerHTML = "הקוד אינו נכון. יש להתחבר מחדש כדי לערוך.";
                 } else {
@@ -481,10 +496,13 @@ function showThanks(o) {
     } else {
         s += "<div style='font-size:1.8rem;" + dark + ";margin-bottom:12px'>ההרשמה נקלטה בהצלחה</div>";
         s += "<div style='font-size:1.3rem;" + dark + ";margin-bottom:18px'>מספר הרשמה: " + o.theNumber + "</div>";
-        s += "<div style='font-size:2.2rem;font-family:Assistant-Bold;" + dark + "'>" + o.theCode + "</div>";
-        s += "<div style='font-size:1.1rem;" + dark + ";margin-top:8px'>";
-        s += "זהו הקוד שלכם. שמרו אותו — הוא נדרש יחד עם מספר הטלפון הנייד כדי לערוך את הפרטים בהמשך.";
-        s += "</div>";
+        if (o.theCode) {
+            s += "<div style='font-size:2.2rem;font-family:Assistant-Bold;" + dark + "'>" + o.theCode + "</div>";
+            s += "<div style='font-size:1.1rem;" + dark + ";margin-top:8px'>";
+            s += "זהו הקוד שלכם. שמרו אותו — הוא נדרש יחד עם מספר הטלפון הנייד כדי לערוך את הפרטים";
+            if (o.editUntil) s += ", עד לתאריך " + o.editUntil;
+            s += ".</div>";
+        }
     }
 
     s += "  </div>";
@@ -492,9 +510,11 @@ function showThanks(o) {
 
     // the form itself is gone from the page now, so the link reloads it and
     // reopens the panel instead of trying to prefill controls that do not exist
-    s += "<div class='editPanel'>";
-    s += "  <div class='editToggle' onclick=\"reopenForEdit()\">עריכה לאחר הרשמה</div>";
-    s += "</div>";
+    if (x.isEdit === "True") {
+        s += "<div class='editPanel'>";
+        s += "  <div class='editToggle' onclick=\"reopenForEdit()\">עריכה לאחר הרשמה</div>";
+        s += "</div>";
+    }
 
     document.querySelector(".inner1").innerHTML = s;
     window.scrollTo({ top: 0, behavior: "smooth" });
