@@ -100,20 +100,45 @@ function newCode()
 	newCode = right("000" & cstr(int(rnd * 10000)), 4)
 end function
 
-' parse a YYYY-MM-DD string from the database into a real date.
-' cdate() depends on the server locale, DateSerial does not
+' parse a date string from the database into a real date.
+' the admin has written three different shapes into the same column over time,
+' so all three are accepted:
+'   2026-10-14   padded iso, written by admin/add.asp
+'   2027-6-14    unpadded iso, written by admin/edit.asp when the day is > 12
+'   02/06/2027   dd/mm/yyyy, written by admin/edit.asp when the day is <= 12
+' cdate() is deliberately avoided - it would read 02/06/2027 through the server
+' locale and could return the 6th of February instead of the 2nd of June
 function parseDbDate(v)
-	dim t
+	dim t, parts, yy, mm, dd
+	parseDbDate = empty
 	t = trim(cstr(v & ""))
-	if len(t) < 10 then
-		parseDbDate = empty
+	if t = "" then exit function
+
+	if instr(t, "/") > 0 then
+		parts = split(t, "/")
+		if ubound(parts) <> 2 then exit function
+		dd = trim(parts(0))
+		mm = trim(parts(1))
+		yy = trim(parts(2))
+	elseif instr(t, "-") > 0 then
+		parts = split(t, "-")
+		if ubound(parts) <> 2 then exit function
+		yy = trim(parts(0))
+		mm = trim(parts(1))
+		dd = trim(parts(2))
+	else
 		exit function
 	end if
-	if not (isnumeric(left(t,4)) and isnumeric(mid(t,6,2)) and isnumeric(mid(t,9,2))) then
-		parseDbDate = empty
-		exit function
-	end if
-	parseDbDate = DateSerial(clng(left(t,4)), clng(mid(t,6,2)), clng(mid(t,9,2)))
+
+	if not (isnumeric(yy) and isnumeric(mm) and isnumeric(dd)) then exit function
+	yy = clng(yy)
+	mm = clng(mm)
+	dd = clng(dd)
+	if yy < 1900 or yy > 2999 then exit function
+	if mm < 1 or mm > 12 then exit function
+	if dd < 1 or dd > 31 then exit function
+
+	parseDbDate = DateSerial(yy, mm, dd)
 end function
 
 ' a date back into the YYYY-MM-DD form the database stores

@@ -95,6 +95,20 @@
 
     // the mobile field is the identity key. field 9 (landline) is never used
     var CELL_FIELD = "11";
+    // participant type drives the registration price, which is shown read only
+    var PARTICIPANT_FIELD = "25";
+    var PRICE_FIELD = "32";
+    // the lodging section feeds that same price field - one figure covers
+    // the conference and the stay together
+    var LODGING_FIELD = "38";      // is lodging needed at all
+    var CHECKIN_FIELD = "39";
+    var CHECKOUT_FIELD = "40";
+    var NIGHTS_FIELD = "41";       // derived from the two dates
+    var ROOM_FIELD = "42";         // confhotel, carries the nightly rates
+    var PARTNER_FIELD = "43";      // sharing the room
+    var BREAKFAST_FIELD = "44";
+    // a free text companion answer is stored as this offset plus the field id
+    var OTHER_OFFSET = 10000;
 
     function getParameterByName(name, url) {
 			if (!url) url = window.location.href;
@@ -124,7 +138,13 @@ function getData() {
             document.getElementById("where").innerHTML = x.location || "";
             document.getElementById("toAgenda").href = "agenda.html?num=" + x.theNumber;
             if (x.banner) document.getElementById("banner").src = "images/" + x.banner;
-            if (x.logo) document.getElementById("clientLogo").src = "images/" + x.logo;
+            showLogo(x.logo);
+
+            if (x.closeForm === "True") {
+                showClosed();
+                setTimeout(changeColors, 1000);
+                return;
+            }
 
             buildForm(x);
             applyEditAvailability();
@@ -175,6 +195,26 @@ function buildForm(x) {
     }
 
     document.getElementById("allData").innerHTML = s;
+
+    // a choice offering "אחר" reveals a free text field beside it
+    $("[data-other-for]").each(function () {
+        var txt = this;
+        var owner = document.querySelector("[data-field='" + txt.getAttribute("data-other-for") + "']");
+        // addEventListener rather than onchange: the price handlers below
+        // watch some of the same controls, and one assignment would replace
+        // the other
+        if (owner) owner.addEventListener("change", function () { toggleOther(txt); });
+        toggleOther(txt);
+    });
+
+    // every control that can move the conference price or the lodging price
+    // recomputes the single figure shown in the payment section
+    var drivers = [PARTICIPANT_FIELD, CHECKIN_FIELD, CHECKOUT_FIELD, ROOM_FIELD];
+    for (var d = 0; d < drivers.length; d++) {
+        var driver = document.querySelector("[data-field='" + drivers[d] + "']");
+        if (driver) driver.addEventListener("change", applyPrice);
+    }
+    applyPrice();
 
     // warn about a duplicate as soon as the registrant leaves the mobile field
     var cell = document.querySelector("[data-field='" + CELL_FIELD + "']");
@@ -279,8 +319,20 @@ function loadRegistration() {
 
 function prefill(values) {
     if (!values) return;
-    for (var i = 0; i < values.length; i++) {
-        setFieldValue(values[i].theField, values[i].theValue);
+    var i;
+    // the owning choices first, so their companions are revealed before
+    // anything tries to write into them
+    for (i = 0; i < values.length; i++) {
+        if (parseInt(values[i].theField, 10) < OTHER_OFFSET) {
+            setFieldValue(values[i].theField, values[i].theValue);
+        }
+    }
+    refreshOtherFields();
+    applyPrice();
+    for (i = 0; i < values.length; i++) {
+        if (parseInt(values[i].theField, 10) >= OTHER_OFFSET) {
+            setFieldValue(values[i].theField, values[i].theValue);
+        }
     }
 }
 
@@ -313,6 +365,11 @@ function fieldAttrs(f) {
            "' data-valid='" + f.validation + "' data-mand='" + f.isMandatory + "'";
 }
 
+// the price and the night count are both derived, so neither is typed into
+function readOnlyAttr(f) {
+    return (f.theNumber === PRICE_FIELD || f.theNumber === NIGHTS_FIELD) ? " readonly" : "";
+}
+
 function sizeAttr(f) {
     var n = parseInt(f.theSize, 10);
     return (n > 0) ? " maxlength='" + n + "'" : "";
@@ -328,6 +385,15 @@ function buildSmallField(f) {
         for (var i = 0; i < f.options.length; i++)
             h += "<option value='" + f.options[i].theNumber + "'>" + f.options[i].theName + "</option>";
         h += "</select>";
+        if (f.otherOption && f.otherOption !== "0") {
+            h += "<input type='text' class='otherText' maxlength='255'"
+               + " placeholder='" + f.theName + " - פירוט'"
+               + " data-field='" + (OTHER_OFFSET + parseInt(f.theNumber, 10)) + "'"
+               + " data-type='1' data-valid='0' data-mand='False'"
+               + " data-other-for='" + f.theNumber + "'"
+               + " data-other-value='" + f.otherOption + "'"
+               + " style='display:none'>";
+        }
     } else if (f.fieldType == "4") {
         h += "<div class='radioLabel'>" + lbl + "</div>";
         h += "<div class='radioArea2' " + at + " data-value='False'>";
@@ -338,7 +404,10 @@ function buildSmallField(f) {
         h += "<div class='radioLabel'>" + lbl + "</div>";
         h += "<input type='date' " + at + ">";
     } else if (f.fieldType == "6") {
-        h += "<input type='text' inputmode='numeric' placeholder='" + lbl + "' " + at + sizeAttr(f) + ">";
+        // a derived field is filled in for the registrant, and a placeholder
+        // is gone the moment the box holds a value - so it gets a real label
+        if (readOnlyAttr(f) !== "") h += "<div class='radioLabel'>" + lbl + "</div>";
+        h += "<input type='text' inputmode='numeric' placeholder='" + lbl + "' " + at + sizeAttr(f) + readOnlyAttr(f) + ">";
     } else {
         h += "<input type='text' placeholder='" + lbl + "' " + at + sizeAttr(f) + ">";
     }
@@ -368,6 +437,147 @@ function pickYesNo(el) {
     area.children[0].className = isYes ? "radioRightSelected" : "radioRight";
     area.children[1].className = isYes ? "radioLeft" : "radioLeftSelected";
     area.setAttribute("data-value", isYes ? "True" : "False");
+    // lodging, sharing and breakfast are all yes/no and all three move the
+    // price. these are divs, so they never fire a change event of their own
+    applyPrice();
+}
+
+function showLogo(logo) {
+    var el = document.getElementById("clientLogo");
+    if (!el) return;
+    if (!logo) { el.style.display = "none"; return; }
+    // a missing file is still "no logo" - show nothing rather than a stand-in
+    el.onerror = function () { this.onerror = null; this.style.display = "none"; };
+    el.src = "images/" + logo;
+}
+
+function showClosed() {
+    var dark = "color:rgba(79,79,79,1)";
+    var s = "";
+    s += "<div class='forumTitle'>" + (x.theName || "") + "</div>";
+    s += "<div class='forumDetails'>";
+    s += "  <div class='oneItem'>" + (x.startdate || "") + "</div>";
+    s += "  <div class='oneItem'>|</div>";
+    s += "  <div class='oneItem'>" + (x.location || "") + "</div>";
+    s += "</div>";
+    s += "<div class='formArea'><div class='data' style='text-align:center'>";
+    s += "<div style='font-size:1.8rem;" + dark + "'>ההרשמה לכנס סגורה</div>";
+    s += "</div></div>";
+    document.querySelector(".inner1").innerHTML = s;
+}
+
+// the companion is only shown, and only required, while "אחר" is chosen
+function toggleOther(txt) {
+    var owner = document.querySelector("[data-field='" + txt.getAttribute("data-other-for") + "']");
+    var show = !!owner && owner.value === txt.getAttribute("data-other-value");
+    txt.style.display = show ? "block" : "none";
+    if (!show) txt.value = "";
+}
+
+function refreshOtherFields() {
+    $("[data-other-for]").each(function () { toggleOther(this); });
+}
+
+function fieldEl(id) {
+    return document.querySelector("[data-field='" + id + "']");
+}
+
+// the field as getForm described it, for what the DOM does not carry
+function fieldMeta(id) {
+    if (!x.sections) return null;
+    for (var s = 0; s < x.sections.length; s++) {
+        var list = x.sections[s].fields;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].theNumber === id) return list[i];
+        }
+    }
+    return null;
+}
+
+function toNum(v) {
+    var parsed = parseInt(v, 10);
+    return isNaN(parsed) ? 0 : parsed;
+}
+
+// a yes/no field is a div that keeps its answer in data-value
+function yesNo(id) {
+    var el = fieldEl(id);
+    return !!el && el.getAttribute("data-value") === "True";
+}
+
+// an <input type="date"> always reads back as yyyy-mm-dd, whatever the browser
+// chooses to show the registrant
+function readDate(id) {
+    var el = fieldEl(id);
+    if (!el || !el.value) return null;
+    var parts = el.value.split("-");
+    if (parts.length !== 3) return null;
+    return Date.UTC(toNum(parts[0]), toNum(parts[1]) - 1, toNum(parts[2]));
+}
+
+// the stay is checkout minus checkin. the night count is read only, so this is
+// the only thing that ever writes it
+function computeNights() {
+    var nightsEl = fieldEl(NIGHTS_FIELD);
+    var from = readDate(CHECKIN_FIELD);
+    var to = readDate(CHECKOUT_FIELD);
+    var nights = 0;
+    if (from !== null && to !== null) {
+        nights = Math.round((to - from) / 86400000);
+        if (nights < 0) nights = 0;
+    }
+    if (nightsEl) nightsEl.value = (nights > 0) ? nights : "";
+    return nights;
+}
+
+// confprice holds one price per participant type for this conference
+function conferencePrice() {
+    var ptEl = fieldEl(PARTICIPANT_FIELD);
+    if (!ptEl || !x.prices) return 0;
+    var chosen = ptEl.value;
+    if (chosen === "" || chosen === "0") return 0;
+    // what an "other" participant type should cost has not been decided, so it
+    // is left out of the total rather than guessed at
+    var companion = document.querySelector("[data-other-for='" + PARTICIPANT_FIELD + "']");
+    if (companion && companion.getAttribute("data-other-value") === chosen) return 0;
+    for (var i = 0; i < x.prices.length; i++) {
+        if (x.prices[i].theParticipant === chosen) return toNum(x.prices[i].thePrice);
+    }
+    return 0;
+}
+
+// every confhotel figure is per night: the room, the room when it is shared,
+// and the breakfast supplement
+function lodgingPrice(nights) {
+    if (nights <= 0) return 0;
+    if (!yesNo(LODGING_FIELD)) return 0;
+
+    var roomEl = fieldEl(ROOM_FIELD);
+    if (!roomEl || roomEl.value === "" || roomEl.value === "0") return 0;
+    var meta = fieldMeta(ROOM_FIELD);
+    if (!meta || !meta.options) return 0;
+
+    var room = null;
+    for (var i = 0; i < meta.options.length; i++) {
+        if (meta.options[i].theNumber === roomEl.value) { room = meta.options[i]; break; }
+    }
+    if (!room) return 0;
+
+    var nightly = toNum(room.thePrice);
+    // a shared room has a nightly rate of its own, when one is configured
+    if (yesNo(PARTNER_FIELD) && toNum(room.withPartner) > 0) nightly = toNum(room.withPartner);
+    if (yesNo(BREAKFAST_FIELD)) nightly = nightly + toNum(room.breakfast);
+    return nights * nightly;
+}
+
+// one figure for the conference and the stay together
+function applyPrice() {
+    if (typeof x === "undefined" || !x || !x.sections) return;
+    var nights = computeNights();
+    var priceEl = fieldEl(PRICE_FIELD);
+    if (!priceEl) return;
+    var total = conferencePrice() + lodgingPrice(nights);
+    priceEl.value = (total > 0) ? total : "";
 }
 
 function validateForm() {
@@ -378,8 +588,11 @@ function validateForm() {
 
     $("[data-field]").each(function () {
         var el = this;
+        // a companion that is not on screen carries no answer to check
+        if (el.hasAttribute("data-other-for") && el.style.display === "none") return;
         var t = el.getAttribute("data-type");
         var mand = (el.getAttribute("data-mand") == "True");
+        if (el.hasAttribute("data-other-for")) mand = true;
         var v = parseInt(el.getAttribute("data-valid") || "0", 10);
         var val = "";
         var msg = "";
@@ -457,6 +670,10 @@ function submitForm() {
                     document.getElementById("sendError").innerHTML =
                         "מספר הטלפון כבר רשום לכנס. אפשר לערוך את ההרשמה הקיימת עם הקוד שקיבלתם.";
                     openEdit();
+                } else if (o && o.error === "formclosed") {
+                    document.getElementById("sendError").innerHTML = "ההרשמה לכנס סגורה.";
+                } else if (o && o.error === "nostock") {
+                    document.getElementById("sendError").innerHTML = "החדר שנבחר אזל. אנא בחרו אפשרות אחרת.";
                 } else if (o && o.error === "closed") {
                     document.getElementById("sendError").innerHTML = "לא ניתן עוד לערוך את הפרטים לכנס זה.";
                 } else if (o && o.error === "badcode") {
