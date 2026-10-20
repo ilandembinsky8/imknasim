@@ -180,4 +180,78 @@ function editIsOpen(isEditFlag, startdateText, whenToClose)
 	if isempty(d) then exit function
 	if date() <= d then editIsOpen = true
 end function
+
+' what admin/edit.asp stores when a date box is saved empty - it substitutes
+' "1/1/1" for a blank, which comes out of the formula as this date. nothing in
+' the column distinguishes it from a real date, so it is read as "not set".
+' this constant can go once edit.asp stops writing it
+const EMPTY_DATE = "2001-01-01"
+
+' trim() only strips spaces, so a tab or a newline survives it and makes an
+' answer look filled in when there is nothing to read. every check for an
+' empty answer goes through here
+function isBlank(v)
+	dim t
+	t = cstr(v & "")
+	t = replace(t, vbTab, " ")
+	t = replace(t, vbCr, " ")
+	t = replace(t, vbLf, " ")
+	isBlank = (trim(t) = "")
+end function
+
+' a stored date that really carries a date, rather than a blank or the marker
+function dateIsSet(v)
+	dim t
+	dateIsSet = false
+	t = trim(cstr(v & ""))
+	if t = "" then exit function
+	if t = EMPTY_DATE then exit function
+	if isempty(parseDbDate(t)) then exit function
+	dateIsSet = true
+end function
+
+' the single place that decides whether the form still accepts answers.
+' closeform shuts it by hand, whenclose shuts it on a date. the date itself is
+' still open and the day after it is not, matching editIsOpen above
+function formIsShut(closeFlag, whenCloseText)
+	dim d
+	formIsShut = false
+	if b(closeFlag) = "True" then
+		formIsShut = true
+		exit function
+	end if
+	if not dateIsSet(whenCloseText) then exit function
+	d = parseDbDate(whenCloseText)
+	if date() > d then formIsShut = true
+end function
+
+' which of the three confprice columns applies today. the conference day is
+' tested first, so a whenearly left later than the start date cannot keep the
+' early price alive once the conference has already begun
+function priceTier(startdateText, whenEarlyText)
+	dim d
+	priceTier = "regular"
+	d = parseDbDate(startdateText)
+	if not isempty(d) then
+		if date() >= d then
+			priceTier = "onsite"
+			exit function
+		end if
+	end if
+	if not dateIsSet(whenEarlyText) then exit function
+	d = parseDbDate(whenEarlyText)
+	if date() <= d then priceTier = "early"
+end function
+
+' the price of one tier. a tier the client never filled in falls back to the
+' regular price - charging nothing would be a worse error than charging full
+function pickPrice(tier, earlyPrice, regularPrice, onsitePrice)
+	dim v
+	v = 0
+	if tier = "early" then v = clng(n(earlyPrice))
+	if tier = "onsite" then v = clng(n(onsitePrice))
+	if v <= 0 then v = clng(n(regularPrice))
+	if v < 0 then v = 0
+	pickPrice = v
+end function
 %>

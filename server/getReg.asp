@@ -66,8 +66,11 @@ else
 			r.close
 
 			s = "{""ok"":""True"",""theNumber"":""" & theReg & """,""values"":["
+			' the form's own bookkeeping lives on the 20000 and 21000 bands and is
+			' none of the browser's business. real ids never reach 20000
 			sql = "select thefield, thevalue from [imknasim].[dbo].[regfield] "
-			sql = sql & "where thereg=" & theReg & " order by thefield, theindex"
+			sql = sql & "where thereg=" & theReg & " and thefield < 20000 "
+			sql = sql & "order by thefield, theindex"
 			r1.open sql,strconn,1,3
 			lastField = ""
 			acc = ""

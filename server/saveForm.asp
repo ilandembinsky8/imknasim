@@ -34,6 +34,13 @@ const FLD_BREAKFAST     = 44
 const OTHER_LABEL = "אחר"
 ' companion answers are stored as this offset plus the field id
 const OTHER_OFFSET = 10000
+' the form's own bookkeeping rides in regfield on two further bands, so
+' that no column has to be added to registration. both are keyed on the
+' room field: STOCK says this registration consumed a unit of confhotel
+' stock, PAIR names the registration it shares that room with. real field
+' ids never reach 20000, so these can never collide with an answer
+const STOCK_OFFSET = 20000
+const PAIR_OFFSET  = 21000
 
 const CELL_FIELD  = 11
 const EMAIL_FIELD = 8
@@ -163,6 +170,187 @@ function confChoiceText(fieldId, theValue)
 	r4.close
 end function
 
+' a yes/no field answers True or False and nothing else. a hand built post
+' saying "true" or "1" reads as False here, so it can neither slip past the
+' checks that look for the exact answer nor be stored as a third value
+' the posted answer of field number i, normalised for its type
+function answerOf(i)
+	if fType(i) = "4" then
+		answerOf = postedFlag(fId(i))
+	else
+		answerOf = posted(fId(i))
+	end if
+end function
+
+function postedFlag(fieldId)
+	postedFlag = "False"
+	if posted(fieldId) = "True" then postedFlag = "True"
+end function
+
+' trim, and collapse runs of spaces, so that a roommate typed as
+' "ploni  almoni " still matches a registration stored as "ploni almoni"
+function squash(v)
+	dim t
+	t = cstr(v & "")
+	t = replace(t, vbTab, " ")
+	t = replace(t, vbCr, " ")
+	t = replace(t, vbLf, " ")
+	t = trim(t)
+	do while instr(t, "  ") > 0
+		t = replace(t, "  ", " ")
+	loop
+	squash = t
+end function
+
+' a roommate can only be declared when lodging is wanted and the chosen
+' room is one the client marked as shareable. everything about sharing
+' hangs off this, on the server as well as in the browser
+function roomSharable()
+	dim roomId, sqlr
+	roomSharable = false
+	if postedFlag(FLD_NEEDLODGING) <> "True" then exit function
+	roomId = posted(FLD_ROOM)
+	if roomId = "" then exit function
+	if roomId = "0" then exit function
+	if not isnumeric(roomId) then exit function
+	sqlr = "select withpartner from [imknasim].[dbo].[confhotel] "
+	sqlr = sqlr & "where theconference=" & theConf & " and theindex=" & clng(roomId)
+	r2.open sqlr,strconn,1,3
+	if not r2.eof then
+		if b(r2("withpartner")) = "True" then roomSharable = true
+	end if
+	r2.close
+end function
+
+' the other registration of this conference that is on the same room and
+' either carries the name typed here, or typed this registration's name
+' itself. one that is already paired with somebody else is skipped, so a
+' room never ends up holding three people
+function findPartner(myReg, roomId, partnerName, myName)
+	dim sqlm, nm, mine, roomCol, meId
+	findPartner = 0
+	if roomId = "" then exit function
+	if not isnumeric(roomId) then exit function
+	nm = squash(partnerName)
+	if nm = "" then exit function
+	mine = squash(myName)
+	roomCol = hotelField
+	if roomCol = "0" then exit function
+	' a registration being created has no number yet, and there is then no
+	' row of its own to exclude
+	meId = 0
+	if isnumeric(myReg) then meId = clng(myReg)
+
+	sqlm = "select top 1 rg.theindex from [imknasim].[dbo].[registration] rg "
+	sqlm = sqlm & "where rg.theconf=" & theConf & " and rg.theindex<>" & meId & " "
+	sqlm = sqlm & "and not exists (select 1 from [imknasim].[dbo].[regfield] pr "
+	sqlm = sqlm & "  where pr.thereg=rg.theindex and pr.thefield=" & (PAIR_OFFSET + clng(roomCol))
+	sqlm = sqlm & "  and rtrim(pr.thevalue)<>'' and rtrim(pr.thevalue)<>'" & meId & "') "
+	sqlm = sqlm & "and exists (select 1 from [imknasim].[dbo].[regfield] f "
+	sqlm = sqlm & "  where f.thereg=rg.theindex and f.thefield=" & roomCol
+	sqlm = sqlm & "  and rtrim(f.thevalue)='" & clng(roomId) & "') "
+	sqlm = sqlm & "and (ltrim(rtrim(rg.thename))=N'" & replace(nm, "'", "''") & "' "
+	sqlm = sqlm & "  or exists (select 1 from [imknasim].[dbo].[regfield] g "
+	sqlm = sqlm & "    where g.thereg=rg.theindex and g.thefield=" & (OTHER_OFFSET + FLD_PARTNER)
+	sqlm = sqlm & "    and ltrim(rtrim(g.thevalue))=N'" & replace(mine, "'", "''") & "')) "
+	sqlm = sqlm & "order by rg.theindex"
+	r2.open sqlm,strconn,1,3
+	if not r2.eof then findPartner = clng(n(r2("theindex")))
+	r2.close
+end function
+
+' the regfield id that carries a note for the room field in use
+function noteId(band)
+	noteId = 0
+	if hotelField = "0" then exit function
+	noteId = band + clng(hotelField)
+end function
+
+' read one bookkeeping note, or "" when there is none
+function noteGet(regId, fieldId)
+	dim sqlg
+	noteGet = ""
+	if fieldId = 0 then exit function
+	if clng(n(regId)) = 0 then exit function
+	sqlg = "select thevalue from [imknasim].[dbo].[regfield] "
+	sqlg = sqlg & "where thereg=" & clng(n(regId)) & " and thefield=" & fieldId
+	r3.open sqlg,strconn,1,3
+	if not r3.eof then noteGet = trim(r3("thevalue") & "")
+	r3.close
+end function
+
+' write one bookkeeping note. an empty value removes the row, so that a
+' registration holding nothing carries no note at all
+sub noteSet(regId, fieldId, theNote)
+	dim sqls
+	if fieldId = 0 then exit sub
+	if clng(n(regId)) = 0 then exit sub
+	sqls = "select * from [imknasim].[dbo].[regfield] "
+	sqls = sqls & "where thereg=" & clng(n(regId)) & " and thefield=" & fieldId
+	r3.open sqls,strconn,1,3
+	if r3.eof then
+		if theNote <> "" then
+			r3.addnew
+			r3("thereg") = clng(n(regId))
+			r3("thefield") = fieldId
+			r3("thevalue") = theNote
+			r3.update
+		end if
+	else
+		if theNote = "" then
+			r3.delete
+		else
+			r3("thevalue") = theNote
+			r3.update
+		end if
+	end if
+	r3.close
+end sub
+
+' is that registration still stored as being on this room
+function roomStillWanted(regId, roomId)
+	dim sqlw
+	roomStillWanted = false
+	if hotelField = "0" then exit function
+	if not isnumeric(roomId) then exit function
+	sqlw = "select thevalue from [imknasim].[dbo].[regfield] "
+	sqlw = sqlw & "where thereg=" & clng(n(regId)) & " and thefield=" & hotelField
+	r3.open sqlw,strconn,1,3
+	if not r3.eof then
+		if trim(r3("thevalue") & "") = cstr(roomId) then roomStillWanted = true
+	end if
+	r3.close
+end function
+
+' record whether a registration is consuming a unit of confhotel stock
+sub setHolding(regId, flag)
+	dim note
+	note = ""
+	if flag then note = "True"
+	call noteSet(regId, noteId(STOCK_OFFSET), note)
+end sub
+
+' point a registration at the one it shares a room with, or at nobody
+sub setPartner(regId, partnerId)
+	dim note
+	note = ""
+	if clng(n(partnerId)) <> 0 then note = cstr(clng(n(partnerId)))
+	call noteSet(regId, noteId(PAIR_OFFSET), note)
+end sub
+
+' drop a link only if it still points back here, so that changing partners
+' cannot blank out a pairing somebody else has since made
+sub clearPartner(regId, meReg)
+	if noteGet(regId, noteId(PAIR_OFFSET)) = cstr(clng(n(meReg))) then
+		call noteSet(regId, noteId(PAIR_OFFSET), "")
+	end if
+end sub
+
+' does that registration currently hold the room it is on
+function partnerHoldsRoom(partnerReg, roomId)
+	partnerHoldsRoom = (noteGet(partnerReg, noteId(STOCK_OFFSET)) = "True")
+end function
+
 ' nights between the two posted dates. an <input type="date"> posts
 ' yyyy-mm-dd, which parseDbDate reads
 function nightsBetween(fromText, toText)
@@ -186,10 +374,13 @@ function confPrice(participantValue, otherValue)
 	' what an "other" participant type should cost has not been decided, so it
 	' is left out of the total rather than guessed at
 	if otherValue <> "0" and participantValue = otherValue then exit function
-	sqlp = "select theprice from [imknasim].[dbo].[confprice] "
+	sqlp = "select theprice, earlyprice, confdayprice "
+	sqlp = sqlp & "from [imknasim].[dbo].[confprice] "
 	sqlp = sqlp & "where theconference=" & theConf & " and theparticipant=" & clng(participantValue)
 	r4.open sqlp,strconn,1,3
-	if not r4.eof then confPrice = clng(n(r4("theprice")))
+	if not r4.eof then
+		confPrice = pickPrice(confTier, r4("earlyprice"), r4("theprice"), r4("confdayprice"))
+	end if
 	r4.close
 end function
 
@@ -199,22 +390,20 @@ function lodgingPrice(nights)
 	dim roomId, nightly, sqlh
 	lodgingPrice = 0
 	if nights <= 0 then exit function
-	if posted(FLD_NEEDLODGING) <> "True" then exit function
+	if postedFlag(FLD_NEEDLODGING) <> "True" then exit function
 	roomId = posted(FLD_ROOM)
 	if roomId = "" then exit function
 	if roomId = "0" then exit function
 	if not isnumeric(roomId) then exit function
 
-	sqlh = "select theprice, withpartner, breakfast from [imknasim].[dbo].[confhotel] "
+	' sharing a room does not change the rate - each occupant pays the rate
+	' of the row they chose. withpartner only says the room may be shared
+	sqlh = "select theprice, breakfast from [imknasim].[dbo].[confhotel] "
 	sqlh = sqlh & "where theconference=" & theConf & " and theindex=" & clng(roomId)
 	r4.open sqlh,strconn,1,3
 	if not r4.eof then
 		nightly = clng(n(r4("theprice")))
-		' a shared room has a nightly rate of its own, when one is configured
-		if posted(FLD_PARTNER) = "True" then
-			if clng(n(r4("withpartner"))) > 0 then nightly = clng(n(r4("withpartner")))
-		end if
-		if posted(FLD_BREAKFAST) = "True" then nightly = nightly + clng(n(r4("breakfast")))
+		if postedFlag(FLD_BREAKFAST) = "True" then nightly = nightly + clng(n(r4("breakfast")))
 		lodgingPrice = nights * nightly
 	end if
 	r4.close
@@ -235,13 +424,18 @@ confStart = ""
 confClose = "0"
 confEdit  = "False"
 confShut  = "False"
+confTier  = "regular"
 editOpen  = false
 if confFound then
 	confStart = trim(r("startdate") & "")
 	confClose = n(r("whentoclose"))
 	confEdit  = b(r("isedit"))
-	confShut  = b(r("closeform"))
 	editOpen  = editIsOpen(r("isedit"), confStart, confClose)
+	' closeform shuts the form by hand, whenclose shuts it on a date
+	if formIsShut(r("closeform"), r("whenclose")) then confShut = "True"
+	' the same tier getForm showed the visitor, decided here again so that
+	' what is stored cannot differ from what was on screen
+	confTier = priceTier(confStart, r("whenearly"))
 end if
 r.close
 
@@ -251,6 +445,10 @@ else
 	' load the fields this conference actually has. anything posted that is not
 	' on this list is ignored, so a crafted POST cannot write rows for other fields
 	cnt = 0
+	' decided once, because the mandatory check, the stored answer, the
+	' stock guard and the pairing all have to agree about it
+	shareOk = roomSharable()
+
 	sql1 = "select f.theindex, f.fieldtype, f.ismandatory, f.choicetable, "
 	sql1 = sql1 & "isnull(cf.ismandatory, 0) as confmand "
 	sql1 = sql1 & "from conffield cf, fields f "
@@ -268,6 +466,9 @@ else
 		if n(r1("fieldtype")) = "2" or n(r1("fieldtype")) = "7" then
 			fOther(cnt) = otherOptionId(r1("choicetable"))
 		end if
+		' the roommate name rides on the same companion mechanism as "other",
+		' but its owner is a yes/no field, so the value that opens it is True
+		if fId(cnt) = cstr(FLD_PARTNER) and shareOk then fOther(cnt) = "True"
 		if fId(cnt) = cstr(FLD_PARTICIPANT) then partOther = fOther(cnt)
 		cnt = cnt + 1
 		r1.movenext
@@ -284,7 +485,7 @@ else
 			if fType(i) = "2" or fType(i) = "7" then
 				if theVal = "0" then theVal = ""
 			end if
-			if theVal = "" then missing = missing & fId(i) & ","
+			if isBlank(theVal) then missing = missing & fId(i) & ","
 		end if
 	next
 
@@ -292,8 +493,9 @@ else
 	' "other" option, otherwise the answer carries no information
 	for i = 0 to cnt - 1
 		if fOther(i) <> "0" then
-			if posted(fId(i)) = fOther(i) then
-				if posted(OTHER_OFFSET + clng(fId(i))) = "" then
+			' a yes/no owner answers True, a choice owner answers an option id
+			if answerOf(i) = fOther(i) then
+				if isBlank(posted(OTHER_OFFSET + clng(fId(i)))) then
 					missing = missing & (OTHER_OFFSET + clng(fId(i))) & ","
 				end if
 			end if
@@ -355,7 +557,7 @@ else
 					if hotelNew = "0" then hotelNew = ""
 					' a room is stock. a registrant who says no lodging is needed
 					' holds none, whatever the selector was left on
-					if posted(FLD_NEEDLODGING) <> "True" then hotelNew = ""
+					if postedFlag(FLD_NEEDLODGING) <> "True" then hotelNew = ""
 				end if
 			next
 			if isUpdate = true and hotelField <> "0" then
@@ -365,7 +567,28 @@ else
 				if not r.eof then hotelOld = trim(r("thevalue") & "")
 				r.close
 			end if
-			if hotelNew <> "" and hotelNew <> hotelOld then
+
+			' what this registration was holding, and who it was sharing with,
+			' before this save touched anything
+			tookOld = false
+			oldPartner = 0
+			if isUpdate = true then
+				if noteGet(theReg, noteId(STOCK_OFFSET)) = "True" then tookOld = true
+				if isnumeric(noteGet(theReg, noteId(PAIR_OFFSET))) then
+					oldPartner = clng(noteGet(theReg, noteId(PAIR_OFFSET)))
+				end if
+			end if
+			' who this registrant is sharing with, and whether that person is
+			' already holding the room. resolved before the stock guard, because
+			' the second occupant of a room needs no free unit to join it
+			partnerReg = 0
+			partnerHolds = false
+			if shareOk and postedFlag(FLD_PARTNER) = "True" then
+				partnerReg = findPartner(theReg, hotelNew, posted(OTHER_OFFSET + FLD_PARTNER), trim(posted(FIRST_FIELD) & " " & posted(LAST_FIELD)))
+				partnerHolds = partnerHoldsRoom(partnerReg, hotelNew)
+			end if
+
+			if hotelNew <> "" and hotelNew <> hotelOld and partnerHolds = false then
 				if isnumeric(hotelNew) then
 					sql = "select leftquantity from [imknasim].[dbo].[confhotel] where theindex=" & hotelNew
 					r.open sql,strconn,1,3
@@ -438,6 +661,8 @@ else
 					if fId(i) = cstr(FLD_NIGHTS) then theVal = srvNights
 					if fId(i) = cstr(FLD_PRICE) then theVal = srvPrice
 					if hotelField <> "0" and fId(i) = hotelField then theVal = hotelNew
+					if fType(i) = "4" then theVal = postedFlag(fId(i))
+					if fId(i) = cstr(FLD_PARTNER) and shareOk = false then theVal = "False"
 					cntVals = 0
 					if theVal <> "" then
 						if fType(i) = "3" or fType(i) = "8" then
@@ -478,8 +703,8 @@ else
 					' "other" does not leave the old text behind
 					if fOther(i) <> "0" then
 						otherVal = ""
-						if posted(fId(i)) = fOther(i) then otherVal = posted(OTHER_OFFSET + clng(fId(i)))
-						if otherVal <> "" then
+						if answerOf(i) = fOther(i) then otherVal = posted(OTHER_OFFSET + clng(fId(i)))
+						if not isBlank(otherVal) then
 							vals(0) = otherVal
 							labels(0) = ""
 							call writeField(theReg, OTHER_OFFSET + clng(fId(i)), 1)
@@ -489,31 +714,65 @@ else
 					end if
 				next
 
-				' hotel stock follows the saved answer: give the old room back and take
-				' the new one. without a transaction a rare double booking of the last
-				' room stays possible - the guard before the save narrows the window
-				if hotelField <> "0" and hotelNew <> hotelOld then
-					if hotelOld <> "" and isnumeric(hotelOld) then
-						sql = "select * from [imknasim].[dbo].[confhotel] where theindex=" & hotelOld
-						r.open sql,strconn,1,3
-						if not r.eof then
-							r("leftquantity") = clng(n(r("leftquantity"))) + 1
-							r.update
-						end if
-						r.close
-					end if
-					if hotelNew <> "" and isnumeric(hotelNew) then
-						sql = "select * from [imknasim].[dbo].[confhotel] where theindex=" & hotelNew
-						r.open sql,strconn,1,3
-						if not r.eof then
-							if clng(n(r("leftquantity"))) > 0 then
-								r("leftquantity") = clng(n(r("leftquantity"))) - 1
-								r.update
-							end if
-						end if
-						r.close
+				' hotel stock follows the saved answer. two registrants sharing a
+				' room take one unit between them: the first takes it, the second
+				' takes none. a note in regfield records which of the two this one is,
+				' so an
+				' edit returns only what was really taken. without a transaction a
+				' rare double booking of the last room stays possible - the guard
+				' before the save narrows the window
+				tookNew = false
+				if hotelNew <> "" and partnerHolds = false then tookNew = true
+
+				releaseRoom = ""
+				takeRoom = ""
+				if tookOld = true then
+					if tookNew = false or hotelNew <> hotelOld then releaseRoom = hotelOld
+				end if
+				if tookNew = true then
+					if tookOld = false or hotelNew <> hotelOld then takeRoom = hotelNew
+				end if
+
+				' a room given up while the roommate still wants it does not go back
+				' to stock - the holding passes to them instead
+				handedOver = false
+				if releaseRoom <> "" and oldPartner <> 0 then
+					if roomStillWanted(oldPartner, releaseRoom) then
+						call setHolding(oldPartner, true)
+						handedOver = true
 					end if
 				end if
+
+				if releaseRoom <> "" and handedOver = false and isnumeric(releaseRoom) then
+					sql = "select * from [imknasim].[dbo].[confhotel] where theindex=" & releaseRoom
+					r.open sql,strconn,1,3
+					if not r.eof then
+						r("leftquantity") = clng(n(r("leftquantity"))) + 1
+						r.update
+					end if
+					r.close
+				end if
+
+				if takeRoom <> "" and isnumeric(takeRoom) then
+					sql = "select * from [imknasim].[dbo].[confhotel] where theindex=" & takeRoom
+					r.open sql,strconn,1,3
+					if not r.eof then
+						if clng(n(r("leftquantity"))) > 0 then
+							r("leftquantity") = clng(n(r("leftquantity"))) - 1
+							r.update
+						end if
+					end if
+					r.close
+				end if
+
+				' record what this registration holds and who it shares with, and
+				' keep the other side of the pairing in step
+				call setHolding(theReg, tookNew)
+				call setPartner(theReg, partnerReg)
+				if oldPartner <> 0 and oldPartner <> partnerReg then
+					call clearPartner(oldPartner, theReg)
+				end if
+				if partnerReg <> 0 then call setPartner(partnerReg, theReg)
 
 				s = "{""ok"":""True"",""theNumber"":""" & theReg & ""","
 				if isUpdate = true then

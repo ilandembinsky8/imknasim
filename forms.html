@@ -347,10 +347,7 @@ function setFieldValue(id, val) {
             this.checked = (picked.indexOf(this.value) >= 0);
         });
     } else if (t == "4") {
-        var isYes = (val === "True");
-        el.children[0].className = isYes ? "radioRightSelected" : "radioRight";
-        el.children[1].className = isYes ? "radioLeft" : "radioLeftSelected";
-        el.setAttribute("data-value", isYes ? "True" : "False");
+        setYesNo(el, val === "True");
     } else {
         el.value = val;
     }
@@ -358,6 +355,21 @@ function setFieldValue(id, val) {
 
 function fieldLabel(f) {
     return f.theName + (f.isMandatory == "True" ? " *" : "");
+}
+
+// the free text box that sits beside a field and only matters while that
+// field holds one particular answer: "אחר" on a choice, or yes on the
+// roommate question. it posts and is stored as 10000 + the owner's field id
+function otherBox(f) {
+    if (!f.otherOption || f.otherOption === "0") return "";
+    var hint = (f.theNumber === PARTNER_FIELD) ? "שם השותף לחדר" : (f.theName + " - פירוט");
+    return "<input type='text' class='otherText' maxlength='255'"
+         + " placeholder='" + hint + "'"
+         + " data-field='" + (OTHER_OFFSET + parseInt(f.theNumber, 10)) + "'"
+         + " data-type='1' data-valid='0' data-mand='False'"
+         + " data-other-for='" + f.theNumber + "'"
+         + " data-other-value='" + f.otherOption + "'"
+         + " style='display:none'>";
 }
 
 function fieldAttrs(f) {
@@ -385,21 +397,14 @@ function buildSmallField(f) {
         for (var i = 0; i < f.options.length; i++)
             h += "<option value='" + f.options[i].theNumber + "'>" + f.options[i].theName + "</option>";
         h += "</select>";
-        if (f.otherOption && f.otherOption !== "0") {
-            h += "<input type='text' class='otherText' maxlength='255'"
-               + " placeholder='" + f.theName + " - פירוט'"
-               + " data-field='" + (OTHER_OFFSET + parseInt(f.theNumber, 10)) + "'"
-               + " data-type='1' data-valid='0' data-mand='False'"
-               + " data-other-for='" + f.theNumber + "'"
-               + " data-other-value='" + f.otherOption + "'"
-               + " style='display:none'>";
-        }
+        h += otherBox(f);
     } else if (f.fieldType == "4") {
         h += "<div class='radioLabel'>" + lbl + "</div>";
         h += "<div class='radioArea2' " + at + " data-value='False'>";
         h += "  <div class='radioRight' onclick=\"pickYesNo(this)\">כן</div>";
         h += "  <div class='radioLeftSelected' onclick=\"pickYesNo(this)\">לא</div>";
         h += "</div>";
+        h += otherBox(f);
     } else if (f.fieldType == "5") {
         h += "<div class='radioLabel'>" + lbl + "</div>";
         h += "<input type='date' " + at + ">";
@@ -431,12 +436,16 @@ function buildMultiField(f) {
     return h;
 }
 
-function pickYesNo(el) {
-    var area = el.parentNode;
-    var isYes = (el === area.children[0]);
+// the single place that paints a yes/no control and records its answer
+function setYesNo(area, isYes) {
     area.children[0].className = isYes ? "radioRightSelected" : "radioRight";
     area.children[1].className = isYes ? "radioLeft" : "radioLeftSelected";
     area.setAttribute("data-value", isYes ? "True" : "False");
+}
+
+function pickYesNo(el) {
+    var area = el.parentNode;
+    setYesNo(area, el === area.children[0]);
     // lodging, sharing and breakfast are all yes/no and all three move the
     // price. these are divs, so they never fire a change event of their own
     applyPrice();
@@ -469,7 +478,10 @@ function showClosed() {
 // the companion is only shown, and only required, while "אחר" is chosen
 function toggleOther(txt) {
     var owner = document.querySelector("[data-field='" + txt.getAttribute("data-other-for") + "']");
-    var show = !!owner && owner.value === txt.getAttribute("data-other-value");
+    // a choice field answers through value, a yes/no field through data-value
+    var answer = !owner ? null
+               : (owner.hasAttribute("data-value") ? owner.getAttribute("data-value") : owner.value);
+    var show = (answer !== null) && answer === txt.getAttribute("data-other-value");
     txt.style.display = show ? "block" : "none";
     if (!show) txt.value = "";
 }
@@ -548,31 +560,48 @@ function conferencePrice() {
 
 // every confhotel figure is per night: the room, the room when it is shared,
 // and the breakfast supplement
+// the confhotel row behind the current room selection, or null
+function chosenRoom() {
+    var roomEl = fieldEl(ROOM_FIELD);
+    if (!roomEl || roomEl.value === "" || roomEl.value === "0") return null;
+    var meta = fieldMeta(ROOM_FIELD);
+    if (!meta || !meta.options) return null;
+    for (var i = 0; i < meta.options.length; i++) {
+        if (meta.options[i].theNumber === roomEl.value) return meta.options[i];
+    }
+    return null;
+}
+
+// sharing a room does not change what either occupant pays - each one pays
+// the rate of the row they chose. withPartner only says the room may be
+// shared at all, which is what syncPartnerField below reads
 function lodgingPrice(nights) {
     if (nights <= 0) return 0;
     if (!yesNo(LODGING_FIELD)) return 0;
-
-    var roomEl = fieldEl(ROOM_FIELD);
-    if (!roomEl || roomEl.value === "" || roomEl.value === "0") return 0;
-    var meta = fieldMeta(ROOM_FIELD);
-    if (!meta || !meta.options) return 0;
-
-    var room = null;
-    for (var i = 0; i < meta.options.length; i++) {
-        if (meta.options[i].theNumber === roomEl.value) { room = meta.options[i]; break; }
-    }
+    var room = chosenRoom();
     if (!room) return 0;
-
     var nightly = toNum(room.thePrice);
-    // a shared room has a nightly rate of its own, when one is configured
-    if (yesNo(PARTNER_FIELD) && toNum(room.withPartner) > 0) nightly = toNum(room.withPartner);
     if (yesNo(BREAKFAST_FIELD)) nightly = nightly + toNum(room.breakfast);
     return nights * nightly;
+}
+
+// the roommate question is only asked for a room the client marked shareable.
+// saveForm applies the same rule, so a direct post cannot get around it
+function syncPartnerField() {
+    var el = fieldEl(PARTNER_FIELD);
+    if (!el) return;
+    var room = chosenRoom();
+    var ok = yesNo(LODGING_FIELD) && !!room && room.withPartner === "True";
+    if (!ok && el.getAttribute("data-value") === "True") setYesNo(el, false);
+    var wrap = el.closest(".smallField, .bigField");
+    if (wrap) wrap.style.display = ok ? "" : "none";
 }
 
 // one figure for the conference and the stay together
 function applyPrice() {
     if (typeof x === "undefined" || !x || !x.sections) return;
+    syncPartnerField();
+    refreshOtherFields();
     var nights = computeNights();
     var priceEl = fieldEl(PRICE_FIELD);
     if (!priceEl) return;

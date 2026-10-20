@@ -10,6 +10,8 @@
 const FLD_DAYS          = 28
 const FLD_SESSIONS      = 29
 const FLD_COMPANIONDAYS = 68
+' the yes/no field that carries a roommate name beside it
+const FLD_PARTNER       = 43
 ' field 30 "special activities" has no source yet and is not rendered
 
 ' the exact option label that reveals the free text companion field
@@ -95,10 +97,10 @@ sub emitConfTable(t)
 		s = s & "{""theNumber"":""" & j(r3("theindex")) & ""","
 		s = s & """theName"":""" & j(r3("thename")) & """"
 		if isHotel then
-			' every confhotel figure is per night: the room, the room when it is
-			' shared, and the breakfast supplement
+			' thePrice and breakfast are per night. withPartner is a flag: it
+			' says the room may be shared, and sharing does not change the rate
 			s = s & ",""thePrice"":""" & n(r3("theprice")) & """"
-			s = s & ",""withPartner"":""" & n(r3("withpartner")) & """"
+			s = s & ",""withPartner"":""" & b(r3("withpartner")) & """"
 			s = s & ",""breakfast"":""" & n(r3("breakfast")) & """"
 			s = s & ",""leftQuantity"":""" & n(r3("leftquantity")) & """"
 		end if
@@ -171,8 +173,14 @@ else
 	confEnd   = trim(r("enddate") & "")
 	confEdit  = b(r("isedit"))
 	confClose = n(r("whentoclose"))
-	confShut  = b(r("closeform"))
 	editOpen  = editIsOpen(r("isedit"), confStart, confClose)
+
+	' closeform shuts the form by hand, whenclose shuts it on a date
+	confShut = "False"
+	if formIsShut(r("closeform"), r("whenclose")) then confShut = "True"
+
+	' which of the three confprice columns today falls into
+	confTier = priceTier(confStart, r("whenearly"))
 
 	s = "{"
 	s = s & """theNumber"":""" & j(r("theIndex")) & ""","
@@ -196,6 +204,7 @@ else
 	' a closed form is still described, so the page can show the conference
 	' heading above the notice instead of an empty screen
 	s = s & """closeForm"":""" & confShut & ""","
+	s = s & """priceTier"":""" & confTier & ""","
 
 	' editing after registration is offered only when the conference allows it
 	s = s & """isEdit"":""" & confEdit & ""","
@@ -217,16 +226,19 @@ else
 	end if
 
 	' registration price per participant type, so the form can fill the price
-	' field as soon as a participant type is chosen
+	' field as soon as a participant type is chosen. the three columns are
+	' resolved to one figure here rather than in the browser, so that the
+	' visitor's clock cannot move the price and saveForm cannot disagree
 	s = s & """prices"":["
-	sql = "select theparticipant, theprice from [imknasim].[dbo].[confprice] "
+	sql = "select theparticipant, theprice, earlyprice, confdayprice "
+	sql = sql & "from [imknasim].[dbo].[confprice] "
 	sql = sql & "where theconference=" & theConf & " order by theparticipant"
 	r4.open sql,strconn,1,3
 	firstPrice = true
 	while not r4.eof
 		if firstPrice = false then s = s & ","
 		s = s & "{""theParticipant"":""" & n(r4("theparticipant")) & ""","
-		s = s & """thePrice"":""" & n(r4("theprice")) & """}"
+		s = s & """thePrice"":""" & pickPrice(confTier, r4("earlyprice"), r4("theprice"), r4("confdayprice")) & """}"
 		firstPrice = false
 		r4.movenext
 	wend
@@ -330,9 +342,16 @@ else
 					end if
 
 					s = s & "],"
+					' the roommate name is the same kind of companion, but its owner
+					' is a yes/no field, so the value that opens it is True. whether
+					' the chosen room may be shared at all is decided in the browser,
+					' from withPartner, and enforced again by saveForm
+					if theFieldId = cstr(FLD_PARTNER) then otherId = "True"
 					' a single choice field offering "אחר" gets a free text
 					' companion, posted and stored as 10000 + this field id
-					if theType = "2" or theType = "7" then
+					' a multi choice field is deliberately left out: its owner is a
+					' group of checkboxes with no single answer to key a companion on
+					if theType = "2" or theType = "7" or theFieldId = cstr(FLD_PARTNER) then
 						s = s & """otherOption"":""" & otherId & """}"
 					else
 						s = s & """otherOption"":""0""}"
