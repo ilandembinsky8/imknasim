@@ -323,9 +323,12 @@ function roomStillWanted(regId, roomId)
 end function
 
 ' record whether a registration is consuming a unit of confhotel stock
+' the note is written either way, never left out. a registration that
+' carries no note at all is therefore one saved before room sharing
+' existed, which is what lets the reader below tell the two apart
 sub setHolding(regId, flag)
 	dim note
-	note = ""
+	note = "False"
 	if flag then note = "True"
 	call noteSet(regId, noteId(STOCK_OFFSET), note)
 end sub
@@ -347,8 +350,17 @@ sub clearPartner(regId, meReg)
 end sub
 
 ' does that registration currently hold the room it is on
+' a partner with no note is an older booking, and it was holding its room
 function partnerHoldsRoom(partnerReg, roomId)
-	partnerHoldsRoom = (noteGet(partnerReg, noteId(STOCK_OFFSET)) = "True")
+	dim note
+	partnerHoldsRoom = false
+	if clng(n(partnerReg)) = 0 then exit function
+	note = noteGet(partnerReg, noteId(STOCK_OFFSET))
+	if note = "True" then
+		partnerHoldsRoom = true
+	elseif note = "" and roomStillWanted(partnerReg, roomId) then
+		partnerHoldsRoom = true
+	end if
 end function
 
 ' nights between the two posted dates. an <input type="date"> posts
@@ -573,7 +585,15 @@ else
 			tookOld = false
 			oldPartner = 0
 			if isUpdate = true then
-				if noteGet(theReg, noteId(STOCK_OFFSET)) = "True" then tookOld = true
+				' a registration saved before room sharing existed has no note, and
+				' anything on a room back then was holding it. without this the room
+				' would never be handed back when that booking is edited
+				oldNote = noteGet(theReg, noteId(STOCK_OFFSET))
+				if oldNote = "True" then
+					tookOld = true
+				elseif oldNote = "" and hotelOld <> "" then
+					tookOld = true
+				end if
 				if isnumeric(noteGet(theReg, noteId(PAIR_OFFSET))) then
 					oldPartner = clng(noteGet(theReg, noteId(PAIR_OFFSET)))
 				end if
