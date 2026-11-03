@@ -442,6 +442,7 @@ if confFound then
 	confStart = trim(r("startdate") & "")
 	confClose = n(r("whentoclose"))
 	confEdit  = b(r("isedit"))
+	confList  = b(r("isclosedlist"))
 	editOpen  = editIsOpen(r("isedit"), confStart, confClose)
 	' closeform shuts the form by hand, whenclose shuts it on a date
 	if formIsShut(r("closeform"), r("whenclose")) then confShut = "True"
@@ -514,7 +515,19 @@ else
 		end if
 	next
 
+	' in a conference on a closed list the phone is the one the invitation
+	' was issued to. the browser shows that field read only, but that is
+	' only a hint - this is what actually decides it
+	listRow = 0
+	lockedCell = ""
+	if confList = "True" and theReg = "" then
+		listRow = listMatchIndex(theConf, request.form("gate"))
+		if listRow <> 0 and listRowUsed(listRow) then listRow = 0
+		if listRow <> 0 then lockedCell = listRowPhone(listRow)
+	end if
+
 	theCell = normCell(posted(CELL_FIELD))
+	if lockedCell <> "" then theCell = normCell(lockedCell)
 
 	if missing <> "" then
 		missing = left(missing, len(missing) - 1)
@@ -541,12 +554,23 @@ else
 			r.close
 		end if
 
+		' a new registration for a conference on a closed list has to arrive
+		' with the contact that opened the form. the fields themselves are no
+		' use for this - the registrant is free to change them. an edit is not
+		' checked at all, because the code already proved who this is
+		notOnList = false
+		if confList = "True" and isUpdate = false then
+			if listRow = 0 then notOnList = true
+		end if
+
 		if confShut = "True" then
 			response.write "{""ok"":""False"",""error"":""formclosed""}"
 		elseif editClosed = true then
 			response.write "{""ok"":""False"",""error"":""closed""}"
 		elseif authOk = false then
 			response.write "{""ok"":""False"",""error"":""badcode""}"
+		elseif notOnList = true then
+			response.write "{""ok"":""False"",""error"":""notonlist""}"
 		else
 			' the mobile must not already belong to another registration of this conference
 			sql = "select theindex from [imknasim].[dbo].[registration] "
@@ -681,6 +705,7 @@ else
 					if fId(i) = cstr(FLD_NIGHTS) then theVal = srvNights
 					if fId(i) = cstr(FLD_PRICE) then theVal = srvPrice
 					if hotelField <> "0" and fId(i) = hotelField then theVal = hotelNew
+					if lockedCell <> "" and fId(i) = cstr(CELL_FIELD) then theVal = lockedCell
 					if fType(i) = "4" then theVal = postedFlag(fId(i))
 					if fId(i) = cstr(FLD_PARTNER) and shareOk = false then theVal = "False"
 					cntVals = 0
@@ -793,6 +818,10 @@ else
 					call clearPartner(oldPartner, theReg)
 				end if
 				if partnerReg <> 0 then call setPartner(partnerReg, theReg)
+
+				' the invitation has now been used. only a new registration spends
+				' one - an edit of an existing one leaves the list alone
+				if listRow <> 0 and isUpdate = false then call markListRow(listRow)
 
 				s = "{""ok"":""True"",""theNumber"":""" & theReg & ""","
 				if isUpdate = true then

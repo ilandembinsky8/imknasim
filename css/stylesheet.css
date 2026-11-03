@@ -694,6 +694,57 @@ select, input{
     margin-top:2px
 }
 
+/* the closed list screen. it stands where the form would be, so it cannot
+   borrow the edit panel's rules - those are scoped to .editPanel .editBody.
+   the colour is set here because body carries the conference text colour,
+   which is white on a dark palette and would vanish on this white card */
+.gateBox{
+    float:right;
+    width:100%;
+    text-align:center;
+    color:rgba(79, 79, 79, 1);
+    padding:10px 0
+}
+
+.gateBox .gateTitle{
+    font-size:1.45rem;
+    font-family:Assistant-SemiBold;
+    margin-bottom:10px
+}
+
+.gateBox .gateHint{
+    font-size:1.05rem;
+    margin-bottom:18px
+}
+
+.gateBox .gateRow input{
+    width:300px;
+    max-width:70%;
+    text-align:right;
+    margin-left:10px
+}
+
+.gateBox .gateButton{
+    display:inline-block;
+    width:160px;
+    height:34px;
+    border-radius:17px;
+    background-color:rgba(235, 242, 251, 1);
+    color:rgba(22, 56, 111, 1);
+    font-family:Assistant-SemiBold;
+    font-size:1.1rem;
+    text-align:center;
+    padding-top:4px;
+    cursor:pointer
+}
+
+.gateBox .gateMsg{
+    font-size:1rem;
+    color:rgba(211, 47, 47, 1);
+    margin-top:14px;
+    min-height:1.2em
+}
+
 @media only screen and (max-width: 1600px) {
   .itemHour{
         width:20%;
@@ -734,6 +785,17 @@ select, input{
     }
 
     .editPanel .editBody .editButton{
+        width:100%
+    }
+
+    .gateBox .gateRow input{
+        width:100%;
+        max-width:100%;
+        margin-left:0;
+        margin-bottom:16px
+    }
+
+    .gateBox .gateButton{
         width:100%
     }
 }

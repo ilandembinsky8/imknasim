@@ -92,9 +92,16 @@
     // submit updates that registration instead of creating a new one
     var editReg = "";
     var editCode = "";
+    // the phone or email that got past the closed list screen. it travels
+    // with the registration, because saveForm cannot trust the form fields
+    // for this - the registrant is free to edit them
+    var gateWho = "";
 
     // the mobile field is the identity key. field 9 (landline) is never used
     var CELL_FIELD = "11";
+    var EMAIL_FIELD = "8";
+    var FIRST_FIELD = "1";
+    var LAST_FIELD = "2";
     // participant type drives the registration price, which is shown read only
     var PARTICIPANT_FIELD = "25";
     var PRICE_FIELD = "32";
@@ -142,6 +149,16 @@ function getData() {
 
             if (x.closeForm === "True") {
                 showClosed();
+                setTimeout(changeColors, 1000);
+                return;
+            }
+
+            // a conference on a closed list arrives with no sections at all
+            // until the visitor identifies themselves. the edit panel is left
+            // alone, so somebody already registered can still get in
+            if (x.isClosedList === "True" && (!x.sections || x.sections.length === 0)) {
+                showGate();
+                applyEditAvailability();
                 setTimeout(changeColors, 1000);
                 return;
             }
@@ -296,6 +313,23 @@ function loadRegistration() {
             if (o && o.ok === "True") {
                 editReg = o.theNumber;
                 editCode = code;
+                // on a closed list conference the form was never sent, so it
+                // has to be fetched now, with the code as the proof
+                if (!document.querySelector("[data-field]")) {
+                    $.ajax({
+                        url: "server/getForm.asp",
+                        type: "GET",
+                        data: { item: x.theNumber, reg: o.theNumber, code: code },
+                        dataType: "json",
+                        async: false,
+                        success: function (d3) {
+                            var full = (typeof d3 === "string") ? JSON.parse(d3) : d3;
+                            if (full && full.sections && full.sections.length > 0) x = full;
+                        }
+                    });
+                    ensureFormBuilt();
+                    setTimeout(changeColors, 1000);
+                }
                 prefill(o.values);
                 clearDupMsg();
                 document.getElementById("editBody").style.display = "none";
@@ -377,9 +411,13 @@ function fieldAttrs(f) {
            "' data-valid='" + f.validation + "' data-mand='" + f.isMandatory + "'";
 }
 
-// the price and the night count are both derived, so neither is typed into
+// three fields are not the registrant's to type: the price and the night
+// count are derived, and on a closed list the phone is the one the
+// invitation was issued to. saveForm enforces that last one for real
 function readOnlyAttr(f) {
-    return (f.theNumber === PRICE_FIELD || f.theNumber === NIGHTS_FIELD) ? " readonly" : "";
+    if (f.theNumber === PRICE_FIELD || f.theNumber === NIGHTS_FIELD) return " readonly";
+    if (f.theNumber === CELL_FIELD && x.invitee && x.invitee.theCell) return " readonly";
+    return "";
 }
 
 function sizeAttr(f) {
@@ -414,7 +452,11 @@ function buildSmallField(f) {
         if (readOnlyAttr(f) !== "") h += "<div class='radioLabel'>" + lbl + "</div>";
         h += "<input type='text' inputmode='numeric' placeholder='" + lbl + "' " + at + sizeAttr(f) + readOnlyAttr(f) + ">";
     } else {
-        h += "<input type='text' placeholder='" + lbl + "' " + at + sizeAttr(f) + ">";
+        // same reason as the derived number fields: a placeholder is gone
+        // the moment the box holds a value, so a filled read only field
+        // would sit there unlabelled
+        if (readOnlyAttr(f) !== "") h += "<div class='radioLabel'>" + lbl + "</div>";
+        h += "<input type='text' placeholder='" + lbl + "' " + at + sizeAttr(f) + readOnlyAttr(f) + ">";
     }
 
     h += "<div class='fieldError'></div>";
@@ -458,6 +500,94 @@ function showLogo(logo) {
     // a missing file is still "no logo" - show nothing rather than a stand-in
     el.onerror = function () { this.onerror = null; this.style.display = "none"; };
     el.src = "images/" + logo;
+}
+
+// the closed list screen. the form is not in the page at this point - the
+// server never sent it - so this is the whole of what the visitor can see
+function showGate() {
+    var s = "";
+    s += "<div class='formArea'><div class='data'>";
+    s += "  <div class='gateBox'>";
+    s += "    <div class='gateTitle'>ההרשמה לכנס זה פתוחה למוזמנים בלבד</div>";
+    s += "    <div class='gateHint'>יש להזין את הטלפון הנייד או הדואר האלקטרוני שאיתם הוזמנתם</div>";
+    s += "    <div class='gateRow'>";
+    s += "      <input type='text' id='gateWho' placeholder='טלפון נייד או מייל'>";
+    s += "      <div class='gateButton' onclick='enterGate()'>כניסה</div>";
+    s += "    </div>";
+    s += "    <div id='gateMsg' class='gateMsg'></div>";
+    s += "  </div>";
+    s += "</div></div>";
+    document.getElementById("allData").innerHTML = s;
+    var send = document.querySelector(".sendButton");
+    if (send) send.style.display = "none";
+}
+
+// ask the server again, this time with the contact. the form comes back only
+// if that contact is on the list
+function enterGate() {
+    var who = (document.getElementById("gateWho").value || "").replace(/^\s+|\s+$/g, "");
+    var msg = document.getElementById("gateMsg");
+    msg.innerHTML = "";
+    if (who === "") {
+        msg.innerHTML = "יש להזין טלפון נייד או דואר אלקטרוני.";
+        return;
+    }
+
+    $.ajax({
+        url: "server/getForm.asp",
+        type: "GET",
+        data: { item: x.theNumber, gate: who },
+        dataType: "json",
+        success: function (data2) {
+            var o = (typeof data2 === "string") ? JSON.parse(data2) : data2;
+            if (!o || !o.sections || o.sections.length === 0) {
+                if (o && o.gateUsed === "True") {
+                    msg.innerHTML = "כבר בוצעה הרשמה עם הפרטים האלה. לשינוי הפרטים יש להשתמש בקישור העריכה שלמעלה.";
+                } else {
+                    // deliberately says nothing about who is on the list
+                    msg.innerHTML = "הפרטים שהוזנו אינם מופיעים ברשימת המוזמנים לכנס זה.";
+                }
+                return;
+            }
+            x = o;
+            gateWho = who;
+            buildForm(x);
+            var send = document.querySelector(".sendButton");
+            if (send) send.style.display = "";
+            fillFromInvitee(o.invitee);
+            setTimeout(changeColors, 1000);
+        },
+        error: function () {
+            msg.innerHTML = "אירעה תקלה. אנא נסו שוב.";
+        }
+    });
+}
+
+// start the form off with what the list already knows. all of it stays
+// editable - the list decides who may register, not what they must answer
+function fillFromInvitee(who) {
+    if (!who) return;
+    var full = (who.theName || "").replace(/^\s+|\s+$/g, "");
+    if (full !== "") {
+        var cut = full.indexOf(" ");
+        if (cut < 0) {
+            setFieldValue(FIRST_FIELD, full);
+        } else {
+            setFieldValue(FIRST_FIELD, full.substring(0, cut));
+            setFieldValue(LAST_FIELD, full.substring(cut + 1).replace(/^\s+/, ""));
+        }
+    }
+    if (who.theEmail) setFieldValue(EMAIL_FIELD, who.theEmail);
+    if (who.theCell) setFieldValue(CELL_FIELD, who.theCell);
+}
+
+// the form is only in the page once somebody is allowed to see it, so both
+// ways in have to make sure it is there before writing answers into it
+function ensureFormBuilt() {
+    if (document.querySelector("[data-field]")) return;
+    buildForm(x);
+    var send = document.querySelector(".sendButton");
+    if (send) send.style.display = "";
 }
 
 function showClosed() {
@@ -664,6 +794,7 @@ function submitForm() {
         data.reg = editReg;
         data.code = editCode;
     }
+    if (gateWho !== "") data.gate = gateWho;
 
     $("[data-field]").each(function () {
         var el = this;
@@ -707,6 +838,8 @@ function submitForm() {
                     document.getElementById("sendError").innerHTML = "לא ניתן עוד לערוך את הפרטים לכנס זה.";
                 } else if (o && o.error === "badcode") {
                     document.getElementById("sendError").innerHTML = "הקוד אינו נכון. יש להתחבר מחדש כדי לערוך.";
+                } else if (o && o.error === "notonlist") {
+                    document.getElementById("sendError").innerHTML = "ההזמנה אינה תקפה יותר, או שכבר נעשה בה שימוש. יש לרענן את העמוד ולהזדהות מחדש.";
                 } else {
                     document.getElementById("sendError").innerHTML = "השליחה נכשלה. אנא נסו שוב.";
                 }

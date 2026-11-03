@@ -182,6 +182,31 @@ else
 	' which of the three confprice columns today falls into
 	confTier = priceTier(confStart, r("whenearly"))
 
+	' a conference on a closed list hands out nothing but its heading until
+	' the visitor has shown they belong on that list. the proof is either a
+	' contact from the list, or the number and code of a registration that
+	' already exists - editing is not gated
+	confList = b(r("isclosedlist"))
+	listRow = 0
+	gateUsed = "False"
+	gateOpen = true
+	if confList = "True" then
+		gateOpen = false
+		listRow = listMatchIndex(theConf, request("gate"))
+		if listRow <> 0 and listRowUsed(listRow) then
+			' the invitation was already spent. say so plainly, so that whoever
+			' registered is sent to the edit panel instead of being told they
+			' were never invited
+			gateUsed = "True"
+			listRow = 0
+		end if
+		if listRow <> 0 then
+			gateOpen = true
+		elseif codeMatches(theConf, request("reg"), request("code")) then
+			gateOpen = true
+		end if
+	end if
+
 	s = "{"
 	s = s & """theNumber"":""" & j(r("theIndex")) & ""","
 	s = s & """theName"":""" & j(r("theName")) & ""","
@@ -205,6 +230,21 @@ else
 	' heading above the notice instead of an empty screen
 	s = s & """closeForm"":""" & confShut & ""","
 	s = s & """priceTier"":""" & confTier & ""","
+	s = s & """isClosedList"":""" & confList & ""","
+	s = s & """gateUsed"":""" & gateUsed & ""","
+
+	' what the list knows about whoever just came through, so the form can
+	' start filled in. every one of these stays editable
+	if listRow <> 0 then
+		r4.open "select thename, theemail, thephone from [imknasim].[dbo].[closedlist] where theindex=" & listRow,strconn,1,3
+		if not r4.eof then
+			s = s & """invitee"":{"
+			s = s & """theName"":""" & j(r4("thename")) & ""","
+			s = s & """theEmail"":""" & j(r4("theemail")) & ""","
+			s = s & """theCell"":""" & j(r4("thephone")) & """},"
+		end if
+		r4.close
+	end if
 
 	' editing after registration is offered only when the conference allows it
 	s = s & """isEdit"":""" & confEdit & ""","
@@ -230,142 +270,146 @@ else
 	' resolved to one figure here rather than in the browser, so that the
 	' visitor's clock cannot move the price and saveForm cannot disagree
 	s = s & """prices"":["
-	sql = "select theparticipant, theprice, earlyprice, confdayprice "
-	sql = sql & "from [imknasim].[dbo].[confprice] "
-	sql = sql & "where theconference=" & theConf & " order by theparticipant"
-	r4.open sql,strconn,1,3
-	firstPrice = true
-	while not r4.eof
-		if firstPrice = false then s = s & ","
-		s = s & "{""theParticipant"":""" & n(r4("theparticipant")) & ""","
-		s = s & """thePrice"":""" & pickPrice(confTier, r4("earlyprice"), r4("theprice"), r4("confdayprice")) & """}"
-		firstPrice = false
-		r4.movenext
-	wend
-	r4.close
+	if gateOpen then
+		sql = "select theparticipant, theprice, earlyprice, confdayprice "
+		sql = sql & "from [imknasim].[dbo].[confprice] "
+		sql = sql & "where theconference=" & theConf & " order by theparticipant"
+		r4.open sql,strconn,1,3
+		firstPrice = true
+		while not r4.eof
+			if firstPrice = false then s = s & ","
+			s = s & "{""theParticipant"":""" & n(r4("theparticipant")) & ""","
+			s = s & """thePrice"":""" & pickPrice(confTier, r4("earlyprice"), r4("theprice"), r4("confdayprice")) & """}"
+			firstPrice = false
+			r4.movenext
+		wend
+		r4.close
+	end if
 	s = s & "],"
 
 	s = s & """sections"":["
+	if gateOpen then
 
-	' sections holding fields in this conference, together with their merge
-	' group from conferencesection. the secondary sort on theindex is required -
-	' section.theorder has duplicate values
-	sql1 = "select distinct s.theindex, s.thename, s.theorder, "
-	sql1 = sql1 & "isnull(cs.thenumber, 0) as grp, isnull(cs.theindex, 999999) as csidx "
-	sql1 = sql1 & "from conffield cf "
-	sql1 = sql1 & "inner join fields f on f.theindex = cf.thefield "
-	sql1 = sql1 & "inner join section s on s.theindex = f.fieldsection "
-	sql1 = sql1 & "left join conferencesection cs on cs.thesection = s.theindex "
-	sql1 = sql1 & "and cs.theconference = " & theConf & " "
-	sql1 = sql1 & "where cf.theconf = " & theConf & " "
-	sql1 = sql1 & "order by s.theorder, s.theindex"
-	r1.open sql1,strconn,1,3
-	cntSec = 0
-	while not r1.eof
-		secId(cntSec)   = n(r1("theindex"))
-		secName(cntSec) = trim(r1("thename") & "")
-		secGrp(cntSec)  = n(r1("grp"))
-		secCs(cntSec)   = clng(n(r1("csidx")))
-		cntSec = cntSec + 1
-		r1.movenext
-	wend
-	r1.close
+		' sections holding fields in this conference, together with their merge
+		' group from conferencesection. the secondary sort on theindex is required -
+		' section.theorder has duplicate values
+		sql1 = "select distinct s.theindex, s.thename, s.theorder, "
+		sql1 = sql1 & "isnull(cs.thenumber, 0) as grp, isnull(cs.theindex, 999999) as csidx "
+		sql1 = sql1 & "from conffield cf "
+		sql1 = sql1 & "inner join fields f on f.theindex = cf.thefield "
+		sql1 = sql1 & "inner join section s on s.theindex = f.fieldsection "
+		sql1 = sql1 & "left join conferencesection cs on cs.thesection = s.theindex "
+		sql1 = sql1 & "and cs.theconference = " & theConf & " "
+		sql1 = sql1 & "where cf.theconf = " & theConf & " "
+		sql1 = sql1 & "order by s.theorder, s.theindex"
+		r1.open sql1,strconn,1,3
+		cntSec = 0
+		while not r1.eof
+			secId(cntSec)   = n(r1("theindex"))
+			secName(cntSec) = trim(r1("thename") & "")
+			secGrp(cntSec)  = n(r1("grp"))
+			secCs(cntSec)   = clng(n(r1("csidx")))
+			cntSec = cntSec + 1
+			r1.movenext
+		wend
+		r1.close
 
-	firstSection = true
-	for i = 0 to cntSec - 1
-		if isGroupLeader(i, cntSec) then
+		firstSection = true
+		for i = 0 to cntSec - 1
+			if isGroupLeader(i, cntSec) then
 
-			idList = ""
-			for k = 0 to cntSec - 1
-				if sameGroup(i, k) then
-					if idList <> "" then idList = idList & ","
-					idList = idList & secId(k)
-				end if
-			next
-
-			if firstSection = false then s = s & ","
-			s = s & "{""theNumber"":""" & secId(i) & ""","
-			s = s & """theName"":""" & j(secName(i)) & ""","
-			s = s & """fields"":["
-
-			' conffield.theorder is a single order across the whole conference,
-			' so merged sections interleave correctly with no extra work.
-			' conffield.ismandatory lets one conference add a mandatory field
-			' without changing the shared definition
-			sql2 = "select f.theindex, f.thename, f.fieldtype, f.thesize, f.ismandatory, "
-			sql2 = sql2 & "f.validation, f.choicetable, cf.theorder as cford, "
-			sql2 = sql2 & "isnull(cf.ismandatory, 0) as confmand "
-			sql2 = sql2 & "from conffield cf, fields f "
-			sql2 = sql2 & "where f.theindex=cf.thefield and cf.theconf=" & theConf & " "
-			sql2 = sql2 & "and f.fieldsection in (" & idList & ") "
-			sql2 = sql2 & "order by cford"
-			r2.open sql2,strconn,1,3
-			firstField = true
-			while not r2.eof
-				theType = n(r2("fieldtype"))
-				theFieldId = n(r2("theindex"))
-
-				renderIt = true
-				if theType = "7" or theType = "8" then
-					if n(r2("choicetable")) = "0" then
-						if isComputedConfField(theFieldId) = false then renderIt = false
+				idList = ""
+				for k = 0 to cntSec - 1
+					if sameGroup(i, k) then
+						if idList <> "" then idList = idList & ","
+						idList = idList & secId(k)
 					end if
-				end if
+				next
 
-				if renderIt then
-					' mandatory at either level makes the field mandatory
-					theMand = "False"
-					if b(r2("ismandatory")) = "True" then theMand = "True"
-					if b(r2("confmand")) = "True" then theMand = "True"
+				if firstSection = false then s = s & ","
+				s = s & "{""theNumber"":""" & secId(i) & ""","
+				s = s & """theName"":""" & j(secName(i)) & ""","
+				s = s & """fields"":["
 
-					otherId = "0"
+				' conffield.theorder is a single order across the whole conference,
+				' so merged sections interleave correctly with no extra work.
+				' conffield.ismandatory lets one conference add a mandatory field
+				' without changing the shared definition
+				sql2 = "select f.theindex, f.thename, f.fieldtype, f.thesize, f.ismandatory, "
+				sql2 = sql2 & "f.validation, f.choicetable, cf.theorder as cford, "
+				sql2 = sql2 & "isnull(cf.ismandatory, 0) as confmand "
+				sql2 = sql2 & "from conffield cf, fields f "
+				sql2 = sql2 & "where f.theindex=cf.thefield and cf.theconf=" & theConf & " "
+				sql2 = sql2 & "and f.fieldsection in (" & idList & ") "
+				sql2 = sql2 & "order by cford"
+				r2.open sql2,strconn,1,3
+				firstField = true
+				while not r2.eof
+					theType = n(r2("fieldtype"))
+					theFieldId = n(r2("theindex"))
 
-					if firstField = false then s = s & ","
-					s = s & "{""theNumber"":""" & theFieldId & ""","
-					s = s & """theName"":""" & j(r2("thename")) & ""","
-					s = s & """fieldType"":""" & theType & ""","
-					s = s & """theSize"":""" & n(r2("thesize")) & ""","
-					s = s & """isMandatory"":""" & theMand & ""","
-					s = s & """validation"":""" & n(r2("validation")) & ""","
-					s = s & """options"":["
-
-					if theType = "2" or theType = "3" then
-						call emitChoiceTable(r2("choicetable"))
-					elseif theType = "7" or theType = "8" then
-						if n(r2("choicetable")) <> "0" then
-							call emitChoiceTable(r2("choicetable"))
-						elseif theFieldId = cstr(FLD_SESSIONS) then
-							call emitSimple("select theindex, thename from [imknasim].[dbo].[session] where conference=" & theConf & " and showinagenda=1 order by theday, theorder")
-						elseif theFieldId = cstr(FLD_DAYS) or theFieldId = cstr(FLD_COMPANIONDAYS) then
-							call emitDays(confStart, confEnd)
+					renderIt = true
+					if theType = "7" or theType = "8" then
+						if n(r2("choicetable")) = "0" then
+							if isComputedConfField(theFieldId) = false then renderIt = false
 						end if
 					end if
 
-					s = s & "],"
-					' the roommate name is the same kind of companion, but its owner
-					' is a yes/no field, so the value that opens it is True. whether
-					' the chosen room may be shared at all is decided in the browser,
-					' from withPartner, and enforced again by saveForm
-					if theFieldId = cstr(FLD_PARTNER) then otherId = "True"
-					' a single choice field offering "אחר" gets a free text
-					' companion, posted and stored as 10000 + this field id
-					' a multi choice field is deliberately left out: its owner is a
-					' group of checkboxes with no single answer to key a companion on
-					if theType = "2" or theType = "7" or theFieldId = cstr(FLD_PARTNER) then
-						s = s & """otherOption"":""" & otherId & """}"
-					else
-						s = s & """otherOption"":""0""}"
-					end if
-					firstField = false
-				end if
+					if renderIt then
+						' mandatory at either level makes the field mandatory
+						theMand = "False"
+						if b(r2("ismandatory")) = "True" then theMand = "True"
+						if b(r2("confmand")) = "True" then theMand = "True"
 
-				r2.movenext
-			wend
-			r2.close
-			s = s & "]}"
-			firstSection = false
-		end if
-	next
+						otherId = "0"
+
+						if firstField = false then s = s & ","
+						s = s & "{""theNumber"":""" & theFieldId & ""","
+						s = s & """theName"":""" & j(r2("thename")) & ""","
+						s = s & """fieldType"":""" & theType & ""","
+						s = s & """theSize"":""" & n(r2("thesize")) & ""","
+						s = s & """isMandatory"":""" & theMand & ""","
+						s = s & """validation"":""" & n(r2("validation")) & ""","
+						s = s & """options"":["
+
+						if theType = "2" or theType = "3" then
+							call emitChoiceTable(r2("choicetable"))
+						elseif theType = "7" or theType = "8" then
+							if n(r2("choicetable")) <> "0" then
+								call emitChoiceTable(r2("choicetable"))
+							elseif theFieldId = cstr(FLD_SESSIONS) then
+								call emitSimple("select theindex, thename from [imknasim].[dbo].[session] where conference=" & theConf & " and showinagenda=1 order by theday, theorder")
+							elseif theFieldId = cstr(FLD_DAYS) or theFieldId = cstr(FLD_COMPANIONDAYS) then
+								call emitDays(confStart, confEnd)
+							end if
+						end if
+
+						s = s & "],"
+						' the roommate name is the same kind of companion, but its owner
+						' is a yes/no field, so the value that opens it is True. whether
+						' the chosen room may be shared at all is decided in the browser,
+						' from withPartner, and enforced again by saveForm
+						if theFieldId = cstr(FLD_PARTNER) then otherId = "True"
+						' a single choice field offering "אחר" gets a free text
+						' companion, posted and stored as 10000 + this field id
+						' a multi choice field is deliberately left out: its owner is a
+						' group of checkboxes with no single answer to key a companion on
+						if theType = "2" or theType = "7" or theFieldId = cstr(FLD_PARTNER) then
+							s = s & """otherOption"":""" & otherId & """}"
+						else
+							s = s & """otherOption"":""0""}"
+						end if
+						firstField = false
+					end if
+
+					r2.movenext
+				wend
+				r2.close
+				s = s & "]}"
+				firstSection = false
+			end if
+		next
+	end if
 
 	s = s & "]}"
 	response.write s
