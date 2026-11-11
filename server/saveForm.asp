@@ -29,6 +29,8 @@ const FLD_NIGHTS        = 41
 const FLD_ROOM          = 42
 const FLD_PARTNER       = 43
 const FLD_BREAKFAST     = 44
+' left out of the "other" mechanism on purpose - see getForm.asp
+const FLD_CONSENTS      = 72
 
 ' the exact option label that requires a free text companion field
 const OTHER_LABEL = "אחר"
@@ -173,6 +175,23 @@ end function
 ' a yes/no field answers True or False and nothing else. a hand built post
 ' saying "true" or "1" reads as False here, so it can neither slip past the
 ' checks that look for the exact answer nor be stored as a third value
+' has the answer that opens the companion actually been given. a multi
+' choice field answers with a comma separated list, so the trigger has to
+' be looked for inside it rather than compared to the whole answer
+function otherPicked(i)
+	dim parts, k
+	otherPicked = false
+	if fOther(i) = "0" then exit function
+	if fType(i) = "3" or fType(i) = "8" then
+		parts = split(answerOf(i), ",")
+		for k = 0 to ubound(parts)
+			if trim(parts(k)) = fOther(i) then otherPicked = true
+		next
+	else
+		if answerOf(i) = fOther(i) then otherPicked = true
+	end if
+end function
+
 ' the posted answer of field number i, normalised for its type
 function answerOf(i)
 	if fType(i) = "4" then
@@ -479,6 +498,10 @@ else
 		if n(r1("fieldtype")) = "2" or n(r1("fieldtype")) = "7" then
 			fOther(cnt) = otherOptionId(r1("choicetable"))
 		end if
+		if n(r1("fieldtype")) = "3" or n(r1("fieldtype")) = "8" then
+			fOther(cnt) = otherOptionId(r1("choicetable"))
+		end if
+		if fId(cnt) = cstr(FLD_CONSENTS) then fOther(cnt) = "0"
 		' the roommate name rides on the same companion mechanism as "other",
 		' but its owner is a yes/no field, so the value that opens it is True
 		if fId(cnt) = cstr(FLD_PARTNER) and shareOk then fOther(cnt) = "True"
@@ -506,8 +529,7 @@ else
 	' "other" option, otherwise the answer carries no information
 	for i = 0 to cnt - 1
 		if fOther(i) <> "0" then
-			' a yes/no owner answers True, a choice owner answers an option id
-			if answerOf(i) = fOther(i) then
+			if otherPicked(i) then
 				if isBlank(posted(OTHER_OFFSET + clng(fId(i)))) then
 					missing = missing & (OTHER_OFFSET + clng(fId(i))) & ","
 				end if
@@ -748,7 +770,7 @@ else
 					' "other" does not leave the old text behind
 					if fOther(i) <> "0" then
 						otherVal = ""
-						if answerOf(i) = fOther(i) then otherVal = posted(OTHER_OFFSET + clng(fId(i)))
+						if otherPicked(i) then otherVal = posted(OTHER_OFFSET + clng(fId(i)))
 						if not isBlank(otherVal) then
 							vals(0) = otherVal
 							labels(0) = ""

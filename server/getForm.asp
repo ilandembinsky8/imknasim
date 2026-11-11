@@ -12,6 +12,9 @@ const FLD_SESSIONS      = 29
 const FLD_COMPANIONDAYS = 68
 ' the yes/no field that carries a roommate name beside it
 const FLD_PARTNER       = 43
+' the consents checklist. left out of the "other" mechanism on purpose -
+' a free text box inside a list of consents is not wanted
+const FLD_CONSENTS      = 72
 ' field 30 "special activities" has no source yet and is not rendered
 
 ' the exact option label that reveals the free text companion field
@@ -392,9 +395,15 @@ else
 						if theFieldId = cstr(FLD_PARTNER) then otherId = "True"
 						' a single choice field offering "אחר" gets a free text
 						' companion, posted and stored as 10000 + this field id
-						' a multi choice field is deliberately left out: its owner is a
-						' group of checkboxes with no single answer to key a companion on
-						if theType = "2" or theType = "7" or theFieldId = cstr(FLD_PARTNER) then
+						' a multi choice field gets a companion too. its owner is a group of
+						' checkboxes rather than one answer, so the browser opens the box when
+						' the "other" checkbox among them is ticked
+						emitOther = false
+						if theType = "2" or theType = "7" then emitOther = true
+						if theType = "3" or theType = "8" then emitOther = true
+						if theFieldId = cstr(FLD_PARTNER) then emitOther = true
+						if theFieldId = cstr(FLD_CONSENTS) then emitOther = false
+						if emitOther then
 							s = s & """otherOption"":""" & otherId & """}"
 						else
 							s = s & """otherOption"":""0""}"

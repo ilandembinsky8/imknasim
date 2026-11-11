@@ -473,6 +473,7 @@ function buildMultiField(f) {
              f.options[i].theNumber + "'> " + f.options[i].theName + "</label></div>";
     }
     h += "</div>";
+    h += otherBox(f);
     h += "<div class='fieldError'></div>";
     h += "</div>";
     return h;
@@ -608,10 +609,22 @@ function showClosed() {
 // the companion is only shown, and only required, while "אחר" is chosen
 function toggleOther(txt) {
     var owner = document.querySelector("[data-field='" + txt.getAttribute("data-other-for") + "']");
-    // a choice field answers through value, a yes/no field through data-value
-    var answer = !owner ? null
-               : (owner.hasAttribute("data-value") ? owner.getAttribute("data-value") : owner.value);
-    var show = (answer !== null) && answer === txt.getAttribute("data-other-value");
+    var trigger = txt.getAttribute("data-other-value");
+    var show = false;
+    if (owner) {
+        if (owner.hasAttribute("data-value")) {
+            // a yes/no field keeps its answer in data-value
+            show = owner.getAttribute("data-value") === trigger;
+        } else if (owner.tagName === "DIV") {
+            // a multi choice field is a group of checkboxes, so the question is
+            // whether the one carrying the trigger is ticked. a checkbox fires
+            // change that bubbles to this div, so the existing listener catches it
+            var box = owner.querySelector("input[type=checkbox][value='" + trigger + "']");
+            show = !!box && box.checked;
+        } else {
+            show = owner.value === trigger;
+        }
+    }
     txt.style.display = show ? "block" : "none";
     if (!show) txt.value = "";
 }
