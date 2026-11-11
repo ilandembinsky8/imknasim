@@ -339,8 +339,15 @@ else
 				' conffield.ismandatory lets one conference add a mandatory field
 				' without changing the shared definition
 				sql2 = "select f.theindex, f.thename, f.fieldtype, f.thesize, f.ismandatory, "
-				sql2 = sql2 & "f.validation, f.choicetable, cf.theorder as cford, "
-				sql2 = sql2 & "isnull(cf.ismandatory, 0) as confmand "
+				sql2 = sql2 & "f.validation, f.choicetable, f.thelink, f.fieldsection, "
+				sql2 = sql2 & "cf.theorder as cford, "
+				sql2 = sql2 & "isnull(cf.ismandatory, 0) as confmand, "
+				' thetext is nvarchar(max), and ADO hands a column of that type to this
+				' page as the right number of characters with nothing in them - every
+				' one of them a chr(0). the cast gives the driver a bounded column,
+				' which it reads correctly. a consent is a sentence or two, so 4000
+				' characters is far more than the wording will ever need
+				sql2 = sql2 & "cast(f.thetext as nvarchar(4000)) as thetext "
 				sql2 = sql2 & "from conffield cf, fields f "
 				sql2 = sql2 & "where f.theindex=cf.thefield and cf.theconf=" & theConf & " "
 				sql2 = sql2 & "and f.fieldsection in (" & idList & ") "
@@ -363,6 +370,9 @@ else
 						theMand = "False"
 						if b(r2("ismandatory")) = "True" then theMand = "True"
 						if b(r2("confmand")) = "True" then theMand = "True"
+						' a link is only there to be read. there is nothing to fill in, so a
+						' mandatory one would stop the form on a field that cannot be answered
+						if theType = "9" then theMand = "False"
 
 						otherId = "0"
 
@@ -373,6 +383,13 @@ else
 						s = s & """theSize"":""" & n(r2("thesize")) & ""","
 						s = s & """isMandatory"":""" & theMand & ""","
 						s = s & """validation"":""" & n(r2("validation")) & ""","
+						' the wording of a consent, written as html in the admin, and the
+						' address a link field points at
+						s = s & """theText"":""" & j(r2("thetext")) & ""","
+						s = s & """theLink"":""" & j(r2("thelink")) & ""","
+						theConsent = "False"
+						if n(r2("fieldsection")) = cstr(CONSENT_SECTION) then theConsent = "True"
+						s = s & """isConsent"":""" & theConsent & ""","
 						s = s & """options"":["
 
 						if theType = "2" or theType = "3" then

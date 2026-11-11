@@ -745,6 +745,63 @@ select, input{
     min-height:1.2em
 }
 
+/* the consents section. a consent carries its own sentence, so it takes the
+   whole row rather than a quarter of one, and a link field is a line of its
+   own with nothing to fill in */
+.formArea .data .oneSection .consentField{
+    float:right;
+    width:100%;
+    margin-bottom:16px
+}
+
+.formArea .data .oneSection .consentField .consentText{
+    float:right;
+    width:72%;
+    margin-left:3%;
+    line-height:1.5;
+    color:rgba(79, 79, 79, 1)
+}
+
+/* the yes/no control is 80% of its holder, a width meant for the narrow
+   column of a small field. in a full width row it has to be reined in */
+.formArea .data .oneSection .consentField .radioArea2{
+    width:25%
+}
+
+/* the wording arrives from the admin wrapped in paragraphs. the last one
+   runs inline so the mandatory asterisk sits at the end of the sentence
+   instead of dropping to a line of its own */
+.formArea .data .oneSection .consentField .consentText p{
+    margin:0
+}
+
+.formArea .data .oneSection .consentField .consentText p:last-of-type{
+    display:inline
+}
+
+.formArea .data .oneSection .consentField .consentStar{
+    color:rgba(211, 47, 47, 1)
+}
+
+.formArea .data .oneSection .linkField{
+    float:right;
+    width:100%;
+    margin-bottom:10px
+}
+
+.formArea .data .oneSection .linkField .docLink{
+    float:right;
+    text-decoration:underline;
+    cursor:pointer;
+    color:rgba(79, 79, 79, 1)
+}
+
+/* the wording of a link may arrive wrapped in a paragraph too */
+.formArea .data .oneSection .linkField .docLink p{
+    margin:0;
+    display:inline
+}
+
 @media only screen and (max-width: 1600px) {
   .itemHour{
         width:20%;
@@ -797,6 +854,16 @@ select, input{
 
     .gateBox .gateButton{
         width:100%
+    }
+
+    .formArea .data .oneSection .consentField .consentText{
+        width:100%;
+        margin-left:0;
+        margin-bottom:8px
+    }
+
+    .formArea .data .oneSection .consentField .radioArea2{
+        width:60%
     }
 }
 

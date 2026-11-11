@@ -195,10 +195,18 @@ function buildForm(x) {
         for (var k = 0; k < sec.fields.length; k++) {
             var f = sec.fields[k];
 
-            if (f.fieldType == "3" || f.fieldType == "8") {
-                // a multi choice field takes a row of its own
+            // a link with no address is not shown at all - "click here"
+            // leading nowhere is worse than nothing
+            if (f.fieldType == "9" && !f.theLink) continue;
+
+            var multi = (f.fieldType == "3" || f.fieldType == "8");
+            // a consent carries a sentence, and a link is a line of its own,
+            // so neither sits in the four-to-a-row grid
+            var ownRow = multi || f.fieldType == "9" || (f.fieldType == "4" && f.theText);
+
+            if (ownRow) {
                 if (inRow > 0) { s += "<div class='oneSection'>" + row + "</div>"; row = ""; inRow = 0; }
-                s += "<div class='oneSection'>" + buildMultiField(f) + "</div>";
+                s += "<div class='oneSection'>" + (multi ? buildMultiField(f) : buildSmallField(f)) + "</div>";
             } else {
                 row += buildSmallField(f);
                 inRow++;
@@ -428,7 +436,10 @@ function sizeAttr(f) {
 function buildSmallField(f) {
     var lbl = fieldLabel(f);
     var at = fieldAttrs(f);
-    var h = "<div class='smallField'>";
+    var wrap = "smallField";
+    if (f.fieldType == "9") wrap = "linkField";
+    else if (f.fieldType == "4" && f.theText) wrap = "consentField";
+    var h = "<div class='" + wrap + "'>";
 
     if (f.fieldType == "2" || f.fieldType == "7") {
         h += "<select " + at + "><option value='0'>" + lbl + "</option>";
@@ -436,9 +447,21 @@ function buildSmallField(f) {
             h += "<option value='" + f.options[i].theNumber + "'>" + f.options[i].theName + "</option>";
         h += "</select>";
         h += otherBox(f);
+    } else if (f.fieldType == "9") {
+        // nothing to answer here, only something to read. it carries no
+        // data-field, so submitForm never picks it up and nothing is stored
+        h += "<a class='docLink' href='" + f.theLink + "' target='_blank' rel='noopener'>" +
+             (f.theText ? f.theText : f.theName) + "</a>";
     } else if (f.fieldType == "4") {
-        h += "<div class='radioLabel'>" + lbl + "</div>";
-        h += "<div class='radioArea2' " + at + " data-value='False'>";
+        if (f.theText) {
+            // the wording comes from the admin as html, asterisk and all
+            h += "<div class='consentText'>" + f.theText +
+                 (f.isMandatory == "True" ? " <span class='consentStar'>*</span>" : "") + "</div>";
+        } else {
+            h += "<div class='radioLabel'>" + lbl + "</div>";
+        }
+        h += "<div class='radioArea2' " + at +
+             (f.isConsent === "True" ? " data-consent='True'" : "") + " data-value='False'>";
         h += "  <div class='radioRight' onclick=\"pickYesNo(this)\">כן</div>";
         h += "  <div class='radioLeftSelected' onclick=\"pickYesNo(this)\">לא</div>";
         h += "</div>";
@@ -772,21 +795,27 @@ function validateForm() {
         if (t == "3" || t == "8") {
             val = $(el).find("input:checked").length > 0 ? "x" : "";
         } else if (t == "4") {
-            val = "x";   // a yes/no control always holds a value
+            // a yes/no control always holds a value, so "answered" is never the
+            // question. for a consent the question is whether it was agreed to
+            val = (el.getAttribute("data-consent") === "True")
+                ? (el.getAttribute("data-value") === "True" ? "x" : "")
+                : "x";
         } else {
             val = (el.value || "").replace(/^\s+|\s+$/g, "");
             if ((t == "2" || t == "7") && val == "0") val = "";
         }
 
         if (mand && val === "") {
-            msg = "שדה חובה";
+            msg = (t == "4" && el.getAttribute("data-consent") === "True")
+                ? "יש לאשר כדי להמשיך"
+                : "שדה חובה";
         } else if (val !== "" && t != "3" && t != "8" && t != "4") {
             msg = checkValidation(v, val);
         }
 
         if (msg !== "") {
             $(el).addClass("errorField");
-            $(el).closest(".smallField, .bigField").find(".fieldError").html(msg);
+            $(el).closest(".smallField, .bigField, .consentField").find(".fieldError").html(msg);
             if (firstBad === null) firstBad = el;
         }
     });

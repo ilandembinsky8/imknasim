@@ -10,6 +10,11 @@ const DEFAULT_COUNTRY = "972"
 const MAX_TRIES = 5
 const LOCK_MINUTES = 15
 
+' the consents section. a yes/no field in it that is marked mandatory has
+' to be agreed to, not merely answered - see saveForm.asp. getForm.asp
+' flags its fields so the browser applies the same rule
+const CONSENT_SECTION = 13
+
 ' escape text for JSON
 function j(v)
 	dim sj

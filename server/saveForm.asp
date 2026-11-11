@@ -54,6 +54,7 @@ dim fType(300)
 dim fMand(300)
 dim fChoice(300)
 dim fOther(300)
+dim fSection(300)
 dim vals(50)
 dim labels(50)
 
@@ -482,7 +483,7 @@ else
 	shareOk = roomSharable()
 
 	sql1 = "select f.theindex, f.fieldtype, f.ismandatory, f.choicetable, "
-	sql1 = sql1 & "isnull(cf.ismandatory, 0) as confmand "
+	sql1 = sql1 & "f.fieldsection, isnull(cf.ismandatory, 0) as confmand "
 	sql1 = sql1 & "from conffield cf, fields f "
 	sql1 = sql1 & "where f.theindex=cf.thefield and cf.theconf=" & theConf
 	r1.open sql1,strconn,1,3
@@ -494,6 +495,7 @@ else
 		if b(r1("ismandatory")) = "True" then fMand(cnt) = "True"
 		if b(r1("confmand")) = "True" then fMand(cnt) = "True"
 		fChoice(cnt) = n(r1("choicetable"))
+		fSection(cnt) = n(r1("fieldsection"))
 		fOther(cnt) = "0"
 		if n(r1("fieldtype")) = "2" or n(r1("fieldtype")) = "7" then
 			fOther(cnt) = otherOptionId(r1("choicetable"))
@@ -520,6 +522,12 @@ else
 			theVal = posted(fId(i))
 			if fType(i) = "2" or fType(i) = "7" then
 				if theVal = "0" then theVal = ""
+			end if
+			' a mandatory consent has to be agreed to, not merely answered.
+			' "False" is not blank, so without this a consent marked mandatory
+			' would pass with the registrant having said no
+			if fType(i) = "4" and fSection(i) = cstr(CONSENT_SECTION) then
+				if postedFlag(fId(i)) <> "True" then theVal = ""
 			end if
 			if isBlank(theVal) then missing = missing & fId(i) & ","
 		end if
@@ -724,6 +732,9 @@ else
 
 				for i = 0 to cnt - 1
 					theVal = posted(fId(i))
+					' a link is something to read, not something to answer. the browser
+					' never sends one, and a post made by hand must not get a row either
+					if fType(i) = "9" then theVal = ""
 					if fId(i) = cstr(FLD_NIGHTS) then theVal = srvNights
 					if fId(i) = cstr(FLD_PRICE) then theVal = srvPrice
 					if hotelField <> "0" and fId(i) = hotelField then theVal = hotelNew
